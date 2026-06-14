@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Modern E-Commerce & POS Admin Dashboard Frontend
 
-## Getting Started
+A state-of-the-art, high-performance, and visually stunning e-commerce frontend built using Next.js 16 (App Router), TypeScript, and Tailwind CSS. The application is integrated with a secure local authentication system (JWT + HttpOnly Cookies) and a Redux Toolkit state management store.
 
-First, run the development server:
+## 🚀 Key Features
+
+### 🎨 Visuals & Aesthetics
+* **Starry Night Animations:** Interactive animated starry backgrounds utilizing `framer-motion` on login and signup paths.
+* **Premium Product Sliders:** Smooth, crossfading product showcases with detailed descriptions built using Framer Motion's `AnimatePresence`.
+* **Plus Jakarta Sans Typography:** Styled with the modern, high-end *Plus Jakarta Sans* typeface optimized for reading and interface readability.
+* **Responsive Layout:** Pixel-perfect presentation spanning ultra-wide desktop monitors down to mobile viewport widths.
+
+### 🔑 Authentication & Security
+* **Credential-Based Login & Signup:** Secured proxy route handlers (`/api/login`, `/api/sign-up`, `/api/logout`) communicating with the backend.
+* **HttpOnly Session Cookies:** JWT authentication tokens are safely stored in secure, server-managed HttpOnly cookies, protecting the client from XSS exploits.
+* **Google OAuth Ready:** Pre-designed social sign-in interface containing branding assets for google authentication.
+
+### ⚙️ State Management & APIs
+* **Redux Toolkit & RTK Query:** Complete application state sync and cache management using Redux Base Slices.
+* **Dynamic Sliders & Carousel:** Direct binding with backend `/sliders` API using the custom `useGetHomeSlidersQuery` hook.
+* **Smart Search Overlay:** Real-time search query lookup utilizing debounced user inputs for zero-latency lookup.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Framework:** [Next.js 16.2.9](https://nextjs.org) (App Router, SSR, Server Components)
+* **Styling:** [Tailwind CSS](https://tailwindcss.com) (Modern design tokens, responsive layout grid)
+* **Animation:** [Framer Motion](https://www.framer.com/motion/) (Starry night environment, slide transitions)
+* **State Management:** [Redux Toolkit](https://redux-toolkit.js.org/) & [RTK Query](https://redux-toolkit.js.org/rtk-query/overview)
+* **Forms & Validation:** [React Hook Form](https://react-hook-form.com/) (Zod-compatible validation schemas)
+* **Icons:** [Lucide React](https://lucide.dev/) & [React Icons](https://react-icons.github.io/react-icons/)
+
+---
+
+## 📁 Project Structure
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+├── src/
+│   ├── app/                      # Next.js App Router (Layouts & Routes)
+│   │   ├── (commonLayout)/       # Main website layouts & pages
+│   │   ├── api/                  # Proxy API Route handlers (Auth/Sessions)
+│   │   ├── login/                # Log in page route
+│   │   ├── sign-up/              # Sign up page route
+│   │   └── layout.tsx            # Global application shell
+│   ├── components/
+│   │   ├── shared/               # Reusable components (Navbar, Footer, Input)
+│   │   └── ui/                   # Shadcn/Custom base UI elements (Button, Slider)
+│   ├── constants/                # Static configuration & dummy layouts
+│   ├── lib/
+│   │   ├── Providers/            # Redux & Persist context wrappers
+│   │   └── utils.ts              # Styling helpers (cn utility)
+│   ├── redux/                    # Redux Toolkit store & API slices
+│   └── utils/                    # Common helper utilities (getImageUrl, stars)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ⚙️ Configuration & Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To run this application locally, ensure you create a `.env.local` file in the root directory:
 
-## Learn More
+```env
+# URL pointing to your backend API server
+NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🏃‍♂️ Getting Started
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-## Deploy on Vercel
+### 2. Launch Local Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3001](http://localhost:3001) (or your designated port) inside your web browser.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 3. Build Production Bundle
+```bash
+npm run build
+```
+This command compiles the frontend into static assets and optimized pages inside the `.next` directory.
