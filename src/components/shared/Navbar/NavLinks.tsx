@@ -1,41 +1,43 @@
 "use client";
 
-import { useGetMenuCategoryQuery } from "@/redux/features/home/homeApi";
+import { useGetMenuCategoryQuery, useGetNavbarPagesQuery } from "@/redux/features/home/homeApi";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 export interface MenuItem {
-  id: number;
+  _id: string;
   name: string;
   slug: string;
-  parent_id: number | null;
-  mega_menu: "Yes" | "No";
-  serial_no: number;
-  child_categories_show_on_menu: MenuItem[];
+  level: number;
+  parentCategory?: string | null;
+  children?: MenuItem[];
+  subchildren?: MenuItem[];
 }
 
 function NavLinks({ closeSheet }: { closeSheet?: () => void }) {
   const { data: navLinks } = useGetMenuCategoryQuery(undefined);
-  const menus = navLinks?.data?.menus || [];
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const { data: pagesRes } = useGetNavbarPagesQuery(undefined);
+  const menus = navLinks?.data || [];
+  const navPages = pagesRes?.data || [];
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
     <div className="w-full">
       <ul className="flex flex-col md:flex-row md:items-center md:justify-center md:gap-6 py-3">
         {menus.map((menu: MenuItem) => {
           const hasChildren =
-            menu.child_categories_show_on_menu &&
-            menu.child_categories_show_on_menu.length > 0;
-          const isExpanded = expandedId === menu.id;
+            menu.children &&
+            menu.children.length > 0;
+          const isExpanded = expandedId === menu._id;
 
           return (
-            <li key={menu.id} className="relative group flex flex-col md:flex-row md:items-center h-full">
+            <li key={menu._id} className="relative group flex flex-col md:flex-row md:items-center h-full">
               <div className="flex items-center justify-between md:justify-start gap-1 py-2 md:py-4 md:h-full">
                 <Link
-                  href={`/books?category=${menu.slug}`}
+                  href={`/products?category=${menu.slug}`}
                   onClick={closeSheet}
-                  className="flex-1 md:flex-none md:text-sm uppercase hover:text-[#21b4f8] font-semibold text-gray-800 transition-colors cursor-pointer"
+                  className="flex-1 md:flex-none md:text-sm uppercase font-semibold text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-[#5f5eff] transition-colors cursor-pointer"
                 >
                   {menu.name}
                 </Link>
@@ -43,9 +45,9 @@ function NavLinks({ closeSheet }: { closeSheet?: () => void }) {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      setExpandedId(isExpanded ? null : menu.id);
+                      setExpandedId(isExpanded ? null : menu._id);
                     }}
-                    className="p-2 md:p-0 text-gray-600 hover:text-purple-700 transition-colors md:hidden"
+                    className="p-2 md:p-0 text-slate-500 hover:text-primary dark:hover:text-[#5f5eff] transition-colors md:hidden"
                   >
                     <ChevronDown
                       size={20}
@@ -57,30 +59,30 @@ function NavLinks({ closeSheet }: { closeSheet?: () => void }) {
                 {hasChildren && (
                   <ChevronDown
                     size={16}
-                    className="hidden md:block transition-transform duration-300 group-hover:-rotate-180 text-gray-800"
+                    className="hidden md:block transition-transform duration-300 group-hover:-rotate-180 text-slate-600 dark:text-slate-350"
                   />
                 )}
               </div>
 
-              {/* Desktop Subcategory Dropdown (Dekora Style) */}
+              {/* Desktop Subcategory Dropdown (Mega Menu Style) */}
               {hasChildren && (
-                <div className="hidden md:block absolute left-0 top-[80%] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                  <div className="bg-white rounded-b-xl shadow-lg border-t border-gray-100 p-6 flex flex-wrap gap-x-16 gap-y-8 min-w-[500px] rounded-md">
-                    {menu.child_categories_show_on_menu.map(
+                <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-200 ease-out z-50">
+                  <div className="bg-white dark:bg-[#131424] rounded-2xl border border-slate-100 dark:border-slate-800/80 p-8 flex flex-row gap-16 w-max max-w-[90vw] shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
+                    {menu.children!.map(
                       (child: MenuItem) => {
                         const hasSubChildren =
-                          child.child_categories_show_on_menu &&
-                          child.child_categories_show_on_menu.length > 0;
+                          child.children &&
+                          child.children.length > 0;
 
                         return (
-                          <div key={child.id} className="flex flex-col min-w-[140px]">
+                          <div key={child._id} className="flex flex-col min-w-[150px]">
                             <Link
-                              href={`/books?category=${child.slug}`}
+                              href={`/products?category=${child.slug}`}
                               onClick={closeSheet}
-                              className={`mb-4 transition-colors block ${
+                              className={`transition-colors block ${
                                 hasSubChildren
-                                  ? "text-[#00A6F4] font-semibold uppercase tracking-wide text-base"
-                                  : "text-[15px] font-medium text-gray-600 hover:text-purple-700"
+                                  ? "mb-4 text-primary dark:text-[#5f5eff] font-bold uppercase tracking-wider text-[13px]"
+                                  : "text-[14px] font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-[#5f5eff] py-0.5"
                               }`}
                             >
                               {child.name}
@@ -88,13 +90,13 @@ function NavLinks({ closeSheet }: { closeSheet?: () => void }) {
 
                             {hasSubChildren && (
                               <ul className="flex flex-col space-y-3">
-                                {child.child_categories_show_on_menu.map(
+                                {child.children!.map(
                                   (subChild: MenuItem) => (
-                                    <li key={subChild.id}>
+                                    <li key={subChild._id}>
                                       <Link
-                                        href={`/books?category=${subChild.slug}`}
+                                        href={`/products?category=${subChild.slug}`}
                                         onClick={closeSheet}
-                                        className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                                        className="text-[14px] font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-[#5f5eff] transition-colors block py-0.5"
                                       >
                                         {subChild.name}
                                       </Link>
@@ -114,36 +116,36 @@ function NavLinks({ closeSheet }: { closeSheet?: () => void }) {
               {/* Mobile Subcategory Dropdown */}
               {hasChildren && (
                 <div className={`md:hidden overflow-hidden transition-all duration-300 ${isExpanded ? "max-h-[2000px] opacity-100 mt-2" : "max-h-0 opacity-0"}`}>
-                  <div className="pl-4 pb-2 space-y-5 border-l-2 border-gray-100 mb-2">
-                    {menu.child_categories_show_on_menu.map(
+                  <div className="pl-4 pb-2 space-y-5 border-l-2 border-slate-100 dark:border-slate-800 mb-2">
+                    {menu.children!.map(
                       (child: MenuItem) => {
                         const hasSubChildren =
-                          child.child_categories_show_on_menu &&
-                          child.child_categories_show_on_menu.length > 0;
+                          child.children &&
+                          child.children.length > 0;
 
                         return (
-                          <div key={child.id} className="flex flex-col">
+                          <div key={child._id} className="flex flex-col">
                             <Link
-                              href={`/books?category=${child.slug}`}
+                              href={`/products?category=${child.slug}`}
                               onClick={closeSheet}
                               className={`block transition-colors ${
                                 hasSubChildren
-                                  ? "text-purple-800 font-bold uppercase tracking-wide text-xs mb-2"
-                                  : "text-sm text-gray-600 hover:text-purple-700 font-medium py-1"
+                                  ? "text-primary dark:text-[#5f5eff] font-bold uppercase tracking-wide text-xs mb-2"
+                                  : "text-sm text-slate-650 dark:text-slate-300 hover:text-primary dark:hover:text-[#5f5eff] font-medium py-1"
                               }`}
                             >
                               {child.name}
                             </Link>
 
                             {hasSubChildren && (
-                              <ul className="pl-3 space-y-3 border-l border-gray-100">
-                                {child.child_categories_show_on_menu.map(
+                              <ul className="pl-3 space-y-3 border-l border-slate-100 dark:border-slate-800">
+                                {child.children!.map(
                                   (subChild: MenuItem) => (
-                                    <li key={subChild.id}>
+                                    <li key={subChild._id}>
                                       <Link
-                                        href={`/books?category=${subChild.slug}`}
+                                        href={`/products?category=${subChild.slug}`}
                                         onClick={closeSheet}
-                                        className="block text-sm text-gray-500 hover:text-purple-700 font-medium"
+                                        className="block text-sm text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-[#5f5eff] font-medium"
                                       >
                                         {subChild.name}
                                       </Link>
@@ -162,6 +164,21 @@ function NavLinks({ closeSheet }: { closeSheet?: () => void }) {
             </li>
           );
         })}
+        
+        {/* Dynamic Pages */}
+        {navPages.map((page: any) => (
+          <li key={page._id} className="relative group flex flex-col md:flex-row md:items-center h-full">
+            <div className="flex items-center justify-between md:justify-start gap-1 py-2 md:py-4 md:h-full">
+              <Link
+                href={`/${page.slug}`}
+                onClick={closeSheet}
+                className="flex-1 md:flex-none md:text-sm uppercase font-semibold text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-[#5f5eff] transition-colors cursor-pointer"
+              >
+                {page.title}
+              </Link>
+            </div>
+          </li>
+        ))}
       </ul>
     </div>
   );

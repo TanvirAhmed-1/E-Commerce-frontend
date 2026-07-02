@@ -8,11 +8,11 @@ export const renderStars = (rating: number) => {
 
   for (let i = 1; i <= 5; i++) {
     if (i <= fullStars) {
-      stars.push(<FaStar key={i} className="text-yellow-400" />);
+      stars.push(<FaStar key={i} className="text-yellow-400 dark:text-[#00e5a3] transition-colors" />);
     } else if (i === fullStars + 1 && hasHalf) {
-      stars.push(<FaStarHalfAlt key={i} className="text-yellow-400" />);
+      stars.push(<FaStarHalfAlt key={i} className="text-yellow-400 dark:text-[#00e5a3] transition-colors" />);
     } else {
-      stars.push(<FaRegStar key={i} className="text-gray-300" />);
+      stars.push(<FaRegStar key={i} className="text-gray-300 dark:text-slate-700/80 transition-colors" />);
     }
   }
 

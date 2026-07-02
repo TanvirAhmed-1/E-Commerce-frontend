@@ -14,7 +14,7 @@ export const homeApi = baseApi.injectEndpoints({
       query: () => "/get-highlighted-categories",
     }),
     getMenuCategory: builder.query({
-      query: () => "/get-menu-categories",
+      query: () => "/nav-categories",
     }),
     getHighlightProducts: builder.query({
       query: () => `/get-all-highlighted-types-product`,
@@ -24,6 +24,9 @@ export const homeApi = baseApi.injectEndpoints({
     }),
     getFooterInfo: builder.query({
       query: () => "/get-footer",
+    }),
+    getNavbarPages: builder.query({
+      query: () => "/pages?isActive=true&showNavbar=true",
     }),
   }),
 });
@@ -36,4 +39,5 @@ export const {
   useGetMenuCategoryQuery,
   useGetCompanyInfoQuery,
   useGetFooterInfoQuery,
+  useGetNavbarPagesQuery,
 } = homeApi;

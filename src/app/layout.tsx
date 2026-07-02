@@ -23,7 +23,38 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${sansFont.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const savedTheme = localStorage.getItem('theme-preset');
+                  if (savedTheme) {
+                    const theme = JSON.parse(savedTheme);
+                    const root = document.documentElement;
+                    root.style.setProperty('--primary', theme.primary);
+                    root.style.setProperty('--primary-hover', theme.primaryHover);
+                    root.style.setProperty('--primary-foreground', theme.primaryForeground);
+                    root.style.setProperty('--nav-bg', theme.navBg);
+                    root.style.setProperty('--nav-text-hover', theme.navTextHover);
+                  }
+                  
+                  const savedDarkMode = localStorage.getItem('theme');
+                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (savedDarkMode === 'dark' || (!savedDarkMode && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         <ReduxProvider>
           {children}

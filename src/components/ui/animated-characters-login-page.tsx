@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Mail, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch } from "@/redux/hooks";
 import { setToken, setUserInfo } from "@/redux/features/auth/authSlice";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 
 interface PupilProps {
@@ -184,6 +185,8 @@ const EyeBall = ({
 
 function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
   const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -341,9 +344,11 @@ function LoginPage() {
       );
 
       console.log("✅ Login successful!");
-      router.push("/");
+      toast.success("Logged in successfully!");
+      router.push(redirect || "/");
     } catch (err: any) {
       setError(err.message || "Failed to log in.");
+      toast.error(err.message || "Failed to log in.");
       console.log("❌ Login failed:", err);
     } finally {
       setIsLoading(false);
@@ -639,11 +644,18 @@ function LoginPage() {
 
             <Button 
               type="submit" 
-              className="w-full h-12 text-base font-medium" 
+              className="w-full h-12 text-base font-medium flex items-center justify-center gap-2" 
               size="lg" 
               disabled={isLoading}
             >
-              {isLoading ? "Signing in..." : "Log in"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Log in"
+              )}
             </Button>
           </form>
 

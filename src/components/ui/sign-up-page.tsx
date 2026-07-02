@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Eye, EyeOff, ArrowLeft, Mail, User, Lock, Sparkles, Phone } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Mail, User, Lock, Sparkles, Phone, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import Input from "@/components/shared/Input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,6 +43,7 @@ export function SignupPage() {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -104,11 +106,13 @@ export function SignupPage() {
       }
 
       setSuccessMsg("Account created successfully! Redirecting to login...");
+      toast.success("Account created successfully!");
       setTimeout(() => {
         router.push("/login");
       }, 2000);
     } catch (err: any) {
       setErrorMsg(err.message || "Something went wrong.");
+      toast.error(err.message || "Something went wrong.");
     } finally {
       setIsLoading(false);
     }
@@ -400,11 +404,17 @@ export function SignupPage() {
             {/* Terms & Conditions Checkbox */}
             <div className="flex flex-col gap-1 pt-1">
               <div className="flex items-center gap-2">
-                <Checkbox
-                  id="agreeToTerms"
-                  {...register("agreeToTerms", {
-                    required: "You must agree to the terms and conditions",
-                  })}
+                <Controller
+                  name="agreeToTerms"
+                  control={control}
+                  rules={{ required: "You must agree to the terms and conditions" }}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="agreeToTerms"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <label
                   htmlFor="agreeToTerms"
@@ -427,9 +437,16 @@ export function SignupPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white hover:opacity-95 rounded-xl font-semibold text-sm transition-all duration-300 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none mt-2 shadow-lg shadow-indigo-950/20 cursor-pointer"
+              className="w-full h-11.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white hover:opacity-95 rounded-xl font-semibold text-sm transition-all duration-300 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none mt-2 shadow-lg shadow-indigo-950/20 cursor-pointer flex items-center justify-center gap-2"
             >
-              {isLoading ? "Creating Account..." : "Create Account"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </form>
 
