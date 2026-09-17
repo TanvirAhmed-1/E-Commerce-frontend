@@ -1,31 +1,29 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Spinner } from "@/components/ui/spinner";
 import Image from "next/image";
-import { MdOutlineProductionQuantityLimits } from "react-icons/md";
-import { IoSearchOutline } from "react-icons/io5";
 import { useGetAllProductsQuery } from "@/redux/features/product/productApi";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { getDisplayPrice } from "@/utils/priceHelper";
 
-const NavbarSearch = () => {
+export default function NavbarSearch() {
   const { customerType } = useSelector((state: RootState) => state.auth);
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All Categories");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const router = useRouter();
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 500);
-
+    }, 400);
     return () => clearTimeout(handler);
   }, [search]);
 
   const { data, isFetching } = useGetAllProductsQuery(
-    { searchTerm: debouncedSearch },
+    { searchTerm: debouncedSearch, category: category !== "All Categories" ? category : undefined },
     { skip: debouncedSearch.length < 2 }
   );
 
@@ -33,91 +31,108 @@ const NavbarSearch = () => {
 
   const handleProductClick = (item: any) => {
     setSearch("");
-    router.push(`/products/${item?.slug}`);
+    router.push(`/products/${item?.slug || item?._id}`);
   };
 
   const handleSearch = () => {
     if (!search.trim()) return;
-    router.push(`/products?search=${encodeURIComponent(search)}`);
+    const catQuery = category !== "All Categories" ? `&category=${encodeURIComponent(category)}` : "";
+    router.push(`/products?search=${encodeURIComponent(search)}${catQuery}`);
     setSearch("");
   };
 
   return (
-    <div className="relative flex-1 basis-full sm:basis-auto sm:flex-none md:w-74 lg:w-110 flex h-10 sm:h-11 items-center gap-2 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#151522] px-3.5 transition-all duration-300 focus-within:border-primary/50 dark:focus-within:border-[#5f5eff]/50 focus-within:ring-2 focus-within:ring-primary/10 dark:focus-within:ring-[#5f5eff]/10">
-      <IoSearchOutline className="text-slate-400 dark:text-slate-500 text-lg shrink-0" />
-      <input
-        type="text"
-        placeholder="Search specialized gear..."
-        className="flex-1 h-full bg-transparent border-none outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-      />
-      {search && (
-        <button
-          onClick={() => setSearch("")}
-          className="text-xs font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0 cursor-pointer"
-        >
-          Clear
-        </button>
-      )}
+    <div className="relative flex-1 max-w-2xl mx-2">
+      <div className="flex items-center rounded-lg bg-[#f2f3ff] dark:bg-[#09090e] p-1 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        {/* Category selector */}
+        <div className="relative hidden sm:block">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            aria-label="Category selection"
+            className="appearance-none bg-transparent pl-3 pr-7 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+          >
+            <option value="All Categories">All Categories</option>
+            <option value="Plastic Household">Plastic Household</option>
+            <option value="Kitchenware">Kitchenware</option>
+            <option value="Rice Cookers">Rice Cookers</option>
+            <option value="Storage & Organization">Storage & Organization</option>
+          </select>
+          <span className="material-symbols-outlined absolute right-1.5 top-1/2 -translate-y-1/2 text-[18px] text-slate-400 pointer-events-none">
+            arrow_drop_down
+          </span>
+        </div>
 
-      {/* Search Result Overlay */}
+        <div className="hidden sm:block h-5 w-[1px] bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+        {/* Search input */}
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          placeholder="Search 10,000+ kitchen appliances, fryers, plasticware..."
+          className="w-full bg-transparent px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
+        />
+
+        {/* Search button */}
+        <button
+          type="button"
+          onClick={handleSearch}
+          aria-label="Search Store"
+          className="flex items-center justify-center bg-[#003820] dark:bg-[#0f5132] text-white px-3.5 py-1.5 rounded-md hover:bg-[#0f5132] transition-colors cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[18px]">search</span>
+        </button>
+      </div>
+
+      {/* Live search results dropdown */}
       {search.length >= 2 && (
-        <div className="absolute top-[110%] left-0 right-0 bg-white dark:bg-[#151522] max-h-100 w-full z-999 shadow-2xl border border-slate-200 dark:border-slate-800 rounded-2xl p-2 overflow-y-auto custom-scrollbar">
+        <div className="absolute top-[115%] left-0 right-0 bg-white dark:bg-[#121320] max-h-80 w-full z-50 shadow-2xl border border-slate-200 dark:border-slate-800 rounded-xl p-2 overflow-y-auto">
           {isFetching && (
-            <div className="flex items-center justify-center p-4 gap-2 text-sm text-slate-500 dark:text-slate-400">
-              <Spinner /> Searching...
+            <div className="flex items-center justify-center p-4 text-xs text-slate-500">
+              Searching products...
             </div>
           )}
 
-          {!isFetching && products.length > 0 ? (
+          {!isFetching && products.length > 0 && (
             <div className="flex flex-col gap-1">
-              {products.map((item: any) => (
+              {products.slice(0, 6).map((item: any) => (
                 <div
-                  key={item?._id}
+                  key={item._id}
                   onClick={() => handleProductClick(item)}
-                  className="p-2 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1e1e32] transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-800"
+                  className="p-2 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-[#f2f3ff] dark:hover:bg-slate-800 transition-colors"
                 >
-                  <div className="relative w-10 h-10 shrink-0">
-                    <Image
-                      src={item?.thumbnail || "/placeholder.png"}
-                      alt={item?.name}
-                      fill
-                      className="object-cover rounded-lg"
+                  <div className="relative w-9 h-9 shrink-0 bg-slate-100 dark:bg-slate-900 rounded overflow-hidden">
+                    <img
+                      src={item.thumbnail || "/placeholder.png"}
+                      alt={item.name}
+                      className="w-full h-full object-contain"
                     />
                   </div>
-
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-850 dark:text-slate-200 truncate">
-                      {item?.name}
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                      {item.name}
                     </p>
-                    <p className="text-xs text-primary dark:text-[#5f5eff] truncate font-medium">
-                      {item?.category?.name}
+                    <p className="text-[11px] text-[#003820] dark:text-[#95d4ac] font-medium">
+                      {item.category?.name || "Kitchen"}
                     </p>
                   </div>
-
-                  <div className="text-sm font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                    ৳{getDisplayPrice(item, customerType).toFixed(0)}
-                  </div>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                    ৳ {getDisplayPrice(item, customerType).toLocaleString("en-US")}
+                  </span>
                 </div>
               ))}
             </div>
-          ) : (
-            !isFetching && (
-              <div className="py-6 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center gap-2">
-                <MdOutlineProductionQuantityLimits
-                  size={30}
-                  className="text-red-400 dark:text-red-500/80"
-                />
-                <p className="text-sm">No products found!</p>
-              </div>
-            )
+          )}
+
+          {!isFetching && products.length === 0 && (
+            <div className="p-4 text-center text-xs text-slate-400">
+              No products found for &quot;{search}&quot;
+            </div>
           )}
         </div>
       )}
     </div>
   );
-};
-
-export default NavbarSearch;
+}

@@ -1,158 +1,137 @@
+"use client";
+
 import React from "react";
-import { FaHeadphones, FaShippingFast, FaStore } from "react-icons/fa";
-import { FaMoneyBillTransfer } from "react-icons/fa6";
-import {
-  FaInstagram,
-  FaFacebookF,
-  FaTwitter,
-  FaPinterestP,
-  FaTiktok,
-} from "react-icons/fa";
 import Link from "next/link";
 
-const deliveryServices = [
-  {
-    icon: <FaStore />,
-    title: "Free In-Store Pickup",
-    description: "Shop online, pick up in-store — anytime.",
-  },
-  {
-    icon: <FaShippingFast />,
-    title: "Fast & Free Shipping",
-    description: "Get your order delivered quickly & safely.",
-  },
-  {
-    icon: <FaMoneyBillTransfer />,
-    title: "Flexible Payments",
-    description: "Multiple secure payment options available.",
-  },
-  {
-    icon: <FaHeadphones />,
-    title: "24/7 Customer Support",
-    description: "We’re here to help you anytime, anywhere.",
-  },
-];
-
-const footerLinks = [
-  {
-    title: "Company",
-    links: [
-      { name: "About Dekora", href: "/about" },
-      { name: "Our Story", href: "/story" },
-      { name: "Careers", href: "/careers" },
-      { name: "Sustainability", href: "/sustainability" },
-      { name: "Press & Media", href: "/press" },
-      { name: "Contact Us", href: "/contact" },
-    ],
-  },
-  {
-    title: "Customer Care",
-    links: [
-      { name: "Help Center", href: "/help" },
-      { name: "Shipping & Delivery", href: "/shipping" },
-      { name: "Returns & Exchanges", href: "/returns" },
-      { name: "Track Your Order", href: "/track-order" },
-      { name: "Payment Methods", href: "/payments" },
-      { name: "Size Guide", href: "/size-guide" },
-    ],
-  },
-  {
-    title: "Shop",
-    links: [
-      { name: "Men’s Collection", href: "/shop/men" },
-      { name: "Women’s Collection", href: "/shop/women" },
-      { name: "New Arrivals", href: "/shop/new" },
-      { name: "Accessories", href: "/shop/accessories" },
-      { name: "Gift Cards", href: "/gift-cards" },
-      { name: "Sale", href: "/shop/sale" },
-    ],
-  },
-  {
-    title: "Information",
-    links: [
-      { name: "Privacy Policy", href: "/privacy-policy" },
-      { name: "Terms & Conditions", href: "/terms" },
-      { name: "Cookies Policy", href: "/cookies" },
-      { name: "Store Locator", href: "/stores" },
-      { name: "Affiliate Program", href: "/affiliate" },
-      { name: "Partnerships", href: "/partnerships" },
-    ],
-  },
-];
-
-const socialLinks = [
-  { icon: <FaInstagram />, href: "https://instagram.com" },
-  { icon: <FaFacebookF />, href: "https://facebook.com" },
-  { icon: <FaTwitter />, href: "https://twitter.com" },
-  { icon: <FaPinterestP />, href: "https://pinterest.com" },
-  { icon: <FaTiktok />, href: "https://tiktok.com" },
-];
-
-function Footer() {
-  const date = new Date().getFullYear();
+export default function Footer() {
+  const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-100 border-t border-gray-200">
-
-
-      {/* Footer Links */}
-      <div className="px-4 container lg:max-w-[1400px] mx-auto border-y border-y-gray-300 py-10 grid grid-cols-1 md:grid-cols-4 gap-10 text-center md:text-left">
-        {footerLinks.map((section, i) => (
-          <div key={i} className="flex flex-col items-center">
-            <div>
-              <h4 className="text-lg font-semibold mb-4 text-gray-800">
-                {section.title}
-              </h4>
-              <ul className="space-y-2">
-                {section.links.map((link, j) => (
-                  <li key={j}>
-                    <Link
-                      href={link.href}
-                      className="text-gray-600 hover:text-blue-500 transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+    <footer className="w-full bg-[#003820] text-slate-200 pt-12 pb-8 mt-12 shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        {/* Main Footer 4-Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-white/10">
+          {/* Col 1: About & Info */}
+          <div className="flex flex-col gap-3.5">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white text-[#003820] flex items-center justify-center font-black">
+                <span className="material-symbols-outlined text-[20px]">storefront</span>
+              </div>
+              <span className="text-xl font-extrabold text-white tracking-tight">GhorBazar</span>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Bangladesh&apos;s trusted e-commerce destination for genuine kitchen appliances, culinary utensils, and household daily gear.
+            </p>
+            <div className="flex flex-col gap-2 text-xs text-slate-300 pt-1">
+              <span className="flex items-start gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-[#95d4ac] shrink-0 mt-0.5">location_on</span>
+                Gulshan-1, Dhaka 1212, Bangladesh
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-[#95d4ac] shrink-0">headset_mic</span>
+                Hotline: 09612-GHORBZ (9AM - 10PM)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-[#95d4ac] shrink-0">verified_user</span>
+                Trade License: TRAD/DNCC/049182/2023
+              </span>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Follow Us Section */}
-      <div className="py-6 text-center">
-        <h4 className="text-lg font-semibold mb-3 text-gray-800">Follow Us</h4>
-        <div className="flex justify-center gap-6 text-gray-600">
-          {socialLinks.map((social, i) => (
-            <Link
-              key={i}
-              href={social.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xl hover:text-blue-500 transition-colors"
-            >
-              {social.icon}
-            </Link>
-          ))}
+          {/* Col 2: Customer Care */}
+          <div className="flex flex-col gap-3">
+            <span className="text-sm font-bold text-white uppercase tracking-wider">Customer Care</span>
+            <nav className="flex flex-col gap-2 text-xs text-slate-300">
+              <Link href="/dashboard?tab=orders" className="hover:text-white transition-colors">
+                Track Your Order
+              </Link>
+              <Link href="/shipping-policy" className="hover:text-white transition-colors">
+                Shipping &amp; Delivery Policy
+              </Link>
+              <Link href="/returns-refund" className="hover:text-white transition-colors">
+                Returns &amp; Refund Guarantee
+              </Link>
+              <Link href="/warranty-claim" className="hover:text-white transition-colors">
+                Warranty Claim Procedure
+              </Link>
+              <Link href="/customer-faqs" className="hover:text-white transition-colors">
+                Frequently Asked Questions
+              </Link>
+            </nav>
+          </div>
+
+          {/* Col 3: Popular Categories */}
+          <div className="flex flex-col gap-3">
+            <span className="text-sm font-bold text-white uppercase tracking-wider">Popular Categories</span>
+            <nav className="flex flex-col gap-2 text-xs text-slate-300">
+              <Link href="/products?category=Rice+Cookers" className="hover:text-white transition-colors">
+                Electric Rice Cookers
+              </Link>
+              <Link href="/products?category=Air+Fryers" className="hover:text-white transition-colors">
+                Air Fryers &amp; Ovens
+              </Link>
+              <Link href="/products?category=Blenders" className="hover:text-white transition-colors">
+                Electric Kettles &amp; Flasks
+              </Link>
+              <Link href="/products?category=Kitchenware" className="hover:text-white transition-colors">
+                Gas &amp; Induction Stoves
+              </Link>
+              <Link href="/products?category=Cookware" className="hover:text-white transition-colors">
+                Non-Stick Pans &amp; Woks
+              </Link>
+            </nav>
+          </div>
+
+          {/* Col 4: Payments & App Download */}
+          <div className="flex flex-col gap-3">
+            <span className="text-sm font-bold text-white uppercase tracking-wider">Accepted Payments</span>
+            <p className="text-xs text-slate-300">Secured transactions with local mobile wallets and major cards:</p>
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              <span className="bg-white/10 px-2 py-1 rounded text-[11px] font-bold text-white">bKash</span>
+              <span className="bg-white/10 px-2 py-1 rounded text-[11px] font-bold text-white">Nagad</span>
+              <span className="bg-white/10 px-2 py-1 rounded text-[11px] font-bold text-white">Rocket</span>
+              <span className="bg-white/10 px-2 py-1 rounded text-[11px] font-bold text-white">Visa</span>
+              <span className="bg-white/10 px-2 py-1 rounded text-[11px] font-bold text-white">Mastercard</span>
+              <span className="bg-[#fd651e] text-white px-2 py-1 rounded text-[11px] font-bold">Cash on Delivery</span>
+            </div>
+
+            <div className="pt-2">
+              <span className="text-xs font-semibold text-white block mb-2">Download GhorBazar App</span>
+              <div className="flex items-center gap-2">
+                <div className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-2 cursor-pointer transition-colors">
+                  <span className="material-symbols-outlined text-[20px] text-[#95d4ac]">shop</span>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[9px] text-slate-400 leading-tight">Get it on</span>
+                    <span className="text-[11px] font-bold text-white leading-tight">Google Play</span>
+                  </div>
+                </div>
+                <div className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center gap-2 cursor-pointer transition-colors">
+                  <span className="material-symbols-outlined text-[20px] text-[#95d4ac]">phone_iphone</span>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[9px] text-slate-400 leading-tight">Download on</span>
+                    <span className="text-[11px] font-bold text-white leading-tight">App Store</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Copyright */}
-      <div className="flex justify-between px-4 container lg:max-w-[1400px] mx-auto">
-        <p className="text-xs text-gray-500 mb-4">
-          White Label Sportswear &copy; {date} | All rights reserved
-        </p>
-        <a
-          target="_blank"
-          href="https://www.smartsoftware.com.bd"
-          className="text-xs text-gray-500 mb-4 hover:text-blue-500 duration-300 ease-in-out transition-colors"
-        >
-          E-commerce website Development in BD
-        </a>
+        {/* Bottom Bar */}
+        <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-300">
+          <p>© {currentYear} GhorBazar Bangladesh Ltd. All rights reserved. Secure 256-bit SSL encrypted checkout.</p>
+          <div className="flex items-center gap-4 text-xs">
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[15px] text-[#95d4ac]">lock</span>
+              SSLCommerz Verified
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[15px] text-[#95d4ac]">local_shipping</span>
+              All 64 Districts
+            </span>
+          </div>
+        </div>
       </div>
     </footer>
   );
 }
-
-export default Footer;

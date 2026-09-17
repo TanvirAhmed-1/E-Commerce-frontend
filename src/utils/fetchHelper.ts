@@ -4,6 +4,9 @@ export interface FetchOptions extends RequestInit {
   retries?: number;
   retryDelay?: number; // in milliseconds
   retryOnStatuses?: number[];
+  timeout?: number; // in milliseconds, default 8000ms
+  revalidate?: number; // Next.js ISR revalidation in seconds
+  tags?: string[]; // Next.js Cache tags
 }
 
 export interface FetchResponse<T> {
@@ -24,13 +27,16 @@ export async function customFetch<T>(
     token,
     queryParams,
     retries = 2,
-    retryDelay = 1000,
-    retryOnStatuses = [500, 502, 503, 504],
+    retryDelay = 800,
+    retryOnStatuses = [500, 502, 503, 504, 408],
+    timeout = 8000,
+    revalidate,
+    tags,
     ...initOptions
   } = options;
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api";
-  
+
   // Construct URL with query params
   let url = `${backendUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
   if (queryParams) {
@@ -50,41 +56,54 @@ export async function customFetch<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const fetchConfig: RequestInit = {
-    ...initOptions,
-    headers,
+  // Build Next.js caching configuration
+  const nextConfig: { revalidate?: number; tags?: string[] } = {
+    ...(initOptions as any)?.next,
   };
+  if (typeof revalidate === "number") {
+    nextConfig.revalidate = revalidate;
+  }
+  if (Array.isArray(tags)) {
+    nextConfig.tags = tags;
+  }
 
   let attempt = 0;
-  
-  while (true) {
+
+  while (attempt <= retries) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
     try {
-      const response = await fetch(url, fetchConfig);
-      
+      const response = await fetch(url, {
+        ...initOptions,
+        headers,
+        signal: controller.signal,
+        next: Object.keys(nextConfig).length > 0 ? nextConfig : undefined,
+      });
+
+      clearTimeout(timeoutId);
+
       if (response.ok) {
-        const data = await response.json();
+        const json = await response.json();
         return {
           success: true,
-          message: data.message,
-          data: data.data,
+          message: json.message,
+          data: json.data !== undefined ? json.data : json,
         };
       }
 
-      // If response is not ok and we have retries left
+      // If status is retryable and attempts remain
       if (attempt < retries && (retryOnStatuses.includes(response.status) || response.status >= 500)) {
         attempt++;
         await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt));
         continue;
       }
 
-      // No retries left or non-retryable status code
       let errorMessage = `HTTP Error ${response.status}`;
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
-      } catch (_) {
-        // Fallback to text or default message if JSON parsing fails
-      }
+      } catch (_) {}
 
       return {
         success: false,
@@ -94,6 +113,11 @@ export async function customFetch<T>(
         },
       };
     } catch (err: any) {
+      clearTimeout(timeoutId);
+
+      const isAbortError = err?.name === "AbortError";
+      const isTimeout = isAbortError || err?.message?.includes("timeout");
+
       if (attempt < retries) {
         attempt++;
         await new Promise((resolve) => setTimeout(resolve, retryDelay * attempt));
@@ -103,10 +127,32 @@ export async function customFetch<T>(
       return {
         success: false,
         error: {
-          status: 500,
-          message: err.message || "Network request failed",
+          status: isTimeout ? 408 : 500,
+          message: isTimeout
+            ? `Request timed out after ${timeout}ms`
+            : err?.message || "Network request failed",
         },
       };
     }
   }
+
+  return {
+    success: false,
+    error: {
+      status: 500,
+      message: "Max fetch retries exceeded",
+    },
+  };
+}
+
+/**
+ * Server-side slider fetching helper with 1-minute revalidation, 2 retries, 8000ms timeout, and cache tags
+ */
+export async function getHomeSlidersServer() {
+  return customFetch<any[]>("/sliders", {
+    revalidate: 60, // 1 minute revalidation
+    tags: ["sliders", "home-sliders"],
+    timeout: 8000, // 8000ms timeout
+    retries: 2, // 2 retries on failure
+  });
 }

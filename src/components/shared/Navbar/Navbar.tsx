@@ -2,46 +2,25 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ShoppingCart,
-  User,
-  Menu,
-  Heart,
-  ChevronDown,
-  ShoppingBag,
-  Settings,
-  Sun,
-  Moon,
-} from "lucide-react";
-import { GoPencil } from "react-icons/go";
-import { TbLockPassword } from "react-icons/tb";
-import { LuLogOut } from "react-icons/lu";
-import NavbarSearch from "./NavSearch";
-import NavLinks from "./NavLinks";
-import Image from "next/image";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import Container from "../Container";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/features/auth/authSlice";
 import { useGetWishListQuery } from "@/redux/features/wishList/wishListApi";
 import { useGetMyCartQuery } from "@/redux/features/cart/cartApi";
+import NavbarSearch from "./NavSearch";
+import NavMobileDrawer from "./NavMobileDrawer";
 
 export default function Navbar() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { token, name, customerType } = useAppSelector((state) => state.auth);
+  const { token, name } = useAppSelector((state) => state.auth);
 
   const { data: dbCartResponse } = useGetMyCartQuery(undefined, { skip: !token });
-  const cartCount = dbCartResponse?.data?.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
+  const cartItems = dbCartResponse?.data?.items || [];
+  const cartCount = cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+  const cartTotal = dbCartResponse?.data?.totalAmount || 0;
 
   const { data: wishlistResponse } = useGetWishListQuery(undefined, { skip: !token });
   const wishlistCount = wishlistResponse?.data?.products?.length || 0;
@@ -59,9 +38,9 @@ export default function Navbar() {
   }, []);
 
   const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    if (newTheme === "dark") {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    if (next === "dark") {
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
     } else {
@@ -73,295 +52,194 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await fetch("/api/logout", { method: "POST" });
-    } catch (err) {
-      console.error("Failed to clear cookie:", err);
-    }
+    } catch (e) {}
     dispatch(logout());
     router.push("/login");
   };
 
-  const closeSheet = () => setIsSheetOpen(false);
+  const categories = [
+    { label: "Rice Cookers & Steamers", href: "/products?category=Rice+Cookers" },
+    { label: "Pressure Cookers", href: "/products?category=Pressure+Cookers" },
+    { label: "Blenders & Grinders", href: "/products?category=Blenders" },
+    { label: "Induction & Gas Stoves", href: "/products?category=Kitchenware" },
+    { label: "Non-Stick Cookware", href: "/products?category=Cookware" },
+    { label: "Dinnerware", href: "/products?category=Plastic+Household" },
+  ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-[#0B0B14]/95 border-b border-slate-100 dark:border-slate-900 backdrop-blur-md transition-colors duration-300 shadow-sm dark:shadow-none">
-      <div className="py-1"></div>
-
-      {/* Main Header */}
-      <div className="py-2.5">
-        <Container>
-          <div className="flex items-center justify-between gap-4">
-            {/* Logo */}
-            <Link href="/" className="shrink-0 block">
-              <div className="relative w-44 h-11 md:w-48 md:h-12">
-                <Image
-                  src="/Dekora.png"
-                  alt="Company Logo"
-                  fill
-                  priority
-                  quality={100}
-                  sizes="(max-width: 768px) 160px, 200px"
-                  className="object-contain object-left dark:invert dark:brightness-200 transition-all duration-300"
-                />
-              </div>
-            </Link>
-
-            {/* Search Bar — Desktop */}
-            <div className="hidden md:block">
-              <NavbarSearch />
-            </div>
-
-            {/* Right Icons */}
-            <div className="flex items-center gap-1.5 sm:gap-3">
-              {/* Theme Toggle Button */}
-              <button
-                onClick={toggleTheme}
-                aria-label="Toggle theme"
-                className="p-2 text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-[#5f5eff] transition rounded-full hover:bg-slate-50 dark:hover:bg-[#151522] cursor-pointer"
-              >
-                {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
-
-              {/* User Dropdown — Desktop Only */}
-              <div className="relative group hidden md:flex items-center">
-                {token ? (
-                  <button className="flex items-center gap-2 hover:text-primary dark:hover:text-[#5f5eff] text-slate-700 dark:text-slate-200 transition py-1 cursor-pointer">
-                    <span className="text-sm font-semibold max-w-[100px] truncate">{name}</span>
-                    <div className="relative w-8 h-8 rounded-full border-2 border-[#ffb800] p-[1px] flex items-center justify-center overflow-hidden bg-slate-100 dark:bg-[#151522]">
-                      <User size={16} className="text-slate-500 dark:text-slate-400" />
-                    </div>
-                    <ChevronDown
-                      size={14}
-                      className="transition-transform duration-200 group-hover:rotate-180"
-                    />
-                  </button>
-                ) : (
-                  <Link
-                    href="/login"
-                    className="flex items-center gap-2 hover:text-primary dark:hover:text-[#5f5eff] text-slate-700 dark:text-slate-200 transition py-1 cursor-pointer"
-                  >
-                    <span className="text-sm font-semibold">Login</span>
-                    <div className="relative w-8 h-8 rounded-full border-2 border-[#ffb800] p-[1px] flex items-center justify-center bg-slate-100 dark:bg-[#151522] transition-colors group-hover:border-primary dark:group-hover:border-[#5f5eff]">
-                      <User size={16} className="text-slate-500 dark:text-slate-400" />
-                    </div>
-                  </Link>
-                )}
-                {token && (
-                  <div className="absolute top-full right-0 mt-2 w-52 bg-white dark:bg-[#111222] border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-1 group-hover:translate-y-0 z-50">
-                    <div className="absolute -top-2 right-3 w-4 h-4 bg-white dark:bg-[#111222] border-l border-t border-slate-200 dark:border-slate-800 rotate-45" />
-                    <div className="py-2 relative">
-                      <Link
-                        href="/dashboard"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-750 dark:text-slate-305 hover:bg-slate-50 dark:hover:bg-[#181829] hover:text-black dark:hover:text-white transition-colors duration-150"
-                      >
-                        <User size={15} /> My Account
-                      </Link>
-                      <Link
-                        href="/dashboard/my-orders"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-755 dark:text-slate-310 hover:bg-slate-50 dark:hover:bg-[#181829] hover:text-black dark:hover:text-white transition-colors duration-150"
-                      >
-                        <ShoppingBag size={15} /> My Orders
-                      </Link>
-                      <Link
-                        href="/dashboard/wish-list"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-760 dark:text-slate-315 hover:bg-slate-50 dark:hover:bg-[#181829] hover:text-black dark:hover:text-white transition-colors duration-150"
-                      >
-                        <Heart size={15} /> Wishlist
-                      </Link>
-                      <Link
-                        href="/dashboard/following-authors"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-765 dark:text-slate-320 hover:bg-slate-50 dark:hover:bg-[#181829] hover:text-black dark:hover:text-white transition-colors duration-150"
-                      >
-                        <GoPencil /> Author
-                      </Link>
-                      {(customerType === "admin" || customerType === "superadmin" || customerType === "supperadmin") && (
-                        <Link
-                          href="/dashboard/theme-settings"
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-770 dark:text-slate-325 hover:bg-slate-50 dark:hover:bg-[#181829] hover:text-black dark:hover:text-white transition-colors duration-150"
-                        >
-                          <Settings size={15} /> Theme Settings
-                        </Link>
-                      )}
-                      <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
-                      <Link
-                        href="/dashboard/change-password"
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-775 dark:text-slate-330 hover:bg-slate-50 dark:hover:bg-[#181829] hover:text-black dark:hover:text-white transition-colors duration-150"
-                      >
-                        <TbLockPassword size={18} /> Change Password
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-780 dark:text-slate-335 hover:bg-slate-50 dark:hover:bg-[#181829] hover:text-black dark:hover:text-white transition-colors duration-150 cursor-pointer"
-                      >
-                        <LuLogOut size={18} /> Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Wishlist */}
-              <Link href="/wishlist">
-                <button className="relative cursor-pointer flex items-center justify-center p-2 text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-[#5f5eff] transition rounded-full hover:bg-slate-50 dark:hover:bg-[#151522]">
-                  <Heart size={20} className="stroke-[2px]" />
-                  {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-650 text-white text-[10px] rounded-full w-4.5 h-4.5 flex items-center justify-center font-bold">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </button>
-              </Link>
-
-              {/* Cart */}
-              <Link href="/cart">
-                <button className="relative cursor-pointer flex items-center justify-center p-2 text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-[#5f5eff] transition rounded-full hover:bg-slate-50 dark:hover:bg-[#151522]">
-                  <ShoppingCart size={20} className="stroke-[2px]" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-primary dark:bg-[#5f5eff] text-white text-[10px] rounded-full w-4.5 h-4.5 flex items-center justify-center font-bold transition-colors">
-                      {cartCount}
-                    </span>
-                  )}
-                </button>
-              </Link>
-
-              {/* Mobile Menu Trigger */}
-              <div className="md:hidden">
-                <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                  <SheetTrigger asChild>
-                    <button
-                      aria-label="Open menu"
-                      className="p-2 rounded-full hover:bg-slate-50 dark:hover:bg-[#151522] text-slate-700 dark:text-slate-200 transition cursor-pointer"
-                    >
-                      <Menu size={24} />
-                    </button>
-                  </SheetTrigger>
-
-                  <SheetContent
-                    side="left"
-                    className="w-72 p-0 flex flex-col h-full bg-white dark:bg-[#0B0B14] border-r border-slate-200 dark:border-slate-900"
-                  >
-                    <SheetHeader className="px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-900">
-                      <SheetTitle className="text-left">
-                        <Link href="/" className="shrink-0 block" onClick={closeSheet}>
-                          <div className="relative w-36 h-9">
-                            <Image
-                              src="/Dekora.png"
-                              alt="Company Logo"
-                              fill
-                              sizes="140px"
-                              className="object-contain object-left dark:invert dark:brightness-200"
-                            />
-                          </div>
-                        </Link>
-                      </SheetTitle>
-                    </SheetHeader>
-
-                    <div className="flex-1 overflow-y-auto">
-                      {/* Navigation Links */}
-                      <div className="pl-4 py-1 border-b border-slate-100 dark:border-slate-900">
-                        <p className="text-xs font-semibold text-primary dark:text-[#5f5eff] uppercase tracking-wider mb-2 mt-2">
-                          Categories
-                        </p>
-                        <div>
-                          <NavLinks closeSheet={closeSheet} />
-                        </div>
-                      </div>
-
-                      {/* Account Section */}
-                      {token ? (
-                        <div className="px-3 py-3 border-b border-slate-100 dark:border-slate-900 mt-2">
-                          <p className="text-xs font-semibold text-primary dark:text-[#5f5eff] uppercase tracking-wider px-2 mb-2">
-                            My Account
-                          </p>
-                          <Link
-                            href="/dashboard"
-                            onClick={closeSheet}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-750 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#181829] transition"
-                          >
-                            <User size={16} /> My Account
-                          </Link>
-                          <Link
-                            href="/dashboard/my-orders"
-                            onClick={closeSheet}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-755 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#181829] transition"
-                          >
-                            <ShoppingBag size={16} /> My Orders
-                          </Link>
-                          <Link
-                            href="/dashboard/wish-list"
-                            onClick={closeSheet}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-760 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#181829] transition"
-                          >
-                            <Heart size={16} /> Wishlist
-                          </Link>
-                          <Link
-                            href="/dashboard/following-authors"
-                            onClick={closeSheet}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-765 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#181829] transition"
-                          >
-                            <GoPencil size={16} /> Following Authors
-                          </Link>
-                          {(customerType === "admin" || customerType === "superadmin" || customerType === "supperadmin") && (
-                            <Link
-                              href="/dashboard/theme-settings"
-                              onClick={closeSheet}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-770 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#181829] transition"
-                            >
-                              <Settings size={16} /> Theme Settings
-                            </Link>
-                          )}
-                          <Link
-                            href="/dashboard/change-password"
-                            onClick={closeSheet}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-775 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#181829] transition"
-                          >
-                            <TbLockPassword size={16} /> Change Password
-                          </Link>
-                        </div>
-                      ) : (
-                        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-900">
-                          <Link href="/login" onClick={closeSheet}>
-                            <button className="w-full bg-primary dark:bg-[#5f5eff] hover:bg-primary-hover dark:hover:bg-[#4d4cff] text-white text-sm font-medium py-2.5 rounded-lg transition cursor-pointer">
-                              Sign In
-                            </button>
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-
-                    {token && (
-                      <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-900 mt-auto">
-                        <button
-                          onClick={() => {
-                            handleLogout();
-                            closeSheet();
-                          }}
-                          className="flex w-full items-center justify-center gap-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 py-2.5 rounded-lg transition font-medium cursor-pointer"
-                        >
-                          <LuLogOut size={18} /> Logout
-                        </button>
-                      </div>
-                    )}
-                  </SheetContent>
-                </Sheet>
-              </div>
-            </div>
+    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#0B0B14]/95 shadow-[0_2px_12px_rgba(0,56,32,0.06)] backdrop-blur-xl border-b border-slate-100 dark:border-slate-850">
+      {/* 1. Top Announcement Bar */}
+      <div className="bg-[#003820] text-white text-[11px] font-medium">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 h-8 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 overflow-hidden text-ellipsis whitespace-nowrap">
+            <span className="flex items-center gap-1 font-semibold">
+              <span className="material-symbols-outlined text-[14px]">call</span>
+              Hotline: 09612-GHORBZ (9AM - 10PM)
+            </span>
+            <span className="opacity-40">|</span>
+            <span className="hidden md:inline">Free Delivery across Bangladesh on orders over ৳3,000</span>
+            <span className="hidden lg:inline opacity-40">|</span>
+            <span className="hidden lg:inline">100% Authentic Appliances</span>
           </div>
-        </Container>
 
-        {/* Mobile Search */}
-        <Container>
-          <div className="mt-2 pb-1 md:hidden px-3">
-            <NavbarSearch />
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-1">
+              <span className="inline-block w-4 h-3 bg-[#0f5132] rounded-xs border border-white/30 flex items-center justify-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#fd651e]"></span>
+              </span>
+              <span className="font-bold">BD</span>
+            </div>
+            <span className="opacity-40">|</span>
+            <button
+              onClick={toggleTheme}
+              className="p-1 text-slate-200 hover:text-white transition-colors cursor-pointer"
+              title="Toggle Theme"
+            >
+              <span className="material-symbols-outlined text-[14px]">
+                {theme === "dark" ? "light_mode" : "dark_mode"}
+              </span>
+            </button>
           </div>
-        </Container>
+        </div>
       </div>
 
-      {/* Desktop Navigation Links Row */}
-      <nav className="border-t border-slate-100 dark:border-slate-900/60 bg-slate-50/50 dark:bg-[#0c0c16]/50 hidden md:block transition-colors duration-300">
-        <Container>
-          <NavLinks />
-        </Container>
-      </nav>
+      {/* 2. Main Center Header */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 h-18 flex items-center justify-between gap-4">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-[#003820] text-white flex items-center justify-center font-black shadow-xs">
+            <span className="material-symbols-outlined text-[22px]">storefront</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xl font-extrabold text-[#003820] dark:text-[#95d4ac] tracking-tight leading-tight">
+              GhorBazar
+            </span>
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider leading-none">
+              Household & Kitchen
+            </span>
+          </div>
+        </Link>
+
+        {/* Search Bar */}
+        <NavbarSearch />
+
+        {/* Right Actions */}
+        <div className="flex items-center gap-4 shrink-0">
+          <Link
+            href="/dashboard?tab=orders"
+            className="hidden xl:flex flex-col items-center group text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors"
+          >
+            <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+            <span className="text-[10px] font-semibold mt-0.5">Track Order</span>
+          </Link>
+
+          {/* Wishlist */}
+          <Link
+            href="/wishlist"
+            className="relative flex flex-col items-center group text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors"
+          >
+            <div className="relative">
+              <span className="material-symbols-outlined text-[22px]">favorite</span>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full bg-[#fd651e] text-white text-[9px] font-bold flex items-center justify-center">
+                  {wishlistCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] font-semibold mt-0.5 hidden sm:inline">Wishlist</span>
+          </Link>
+
+          {/* Cart preview */}
+          <Link
+            href="/cart"
+            className="flex items-center gap-2 bg-[#f2f3ff] dark:bg-[#121320] px-3 py-1.5 rounded-lg hover:bg-[#eaedff] dark:hover:bg-slate-800 transition-colors border border-slate-200/60 dark:border-slate-800"
+          >
+            <div className="relative flex items-center">
+              <span className="material-symbols-outlined text-[22px] text-[#003820] dark:text-[#95d4ac]">
+                shopping_bag
+              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-[#a73a00] text-white text-[9px] font-bold flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+            <div className="hidden sm:flex flex-col text-left">
+              <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 leading-tight">
+                Cart Total
+              </span>
+              <span className="text-xs font-bold text-[#003820] dark:text-[#95d4ac] leading-none">
+                ৳{cartTotal.toLocaleString("en-US")}
+              </span>
+            </div>
+          </Link>
+
+          {/* User Account / Avatar */}
+          <Link
+            href={token ? "/dashboard" : "/login"}
+            className="w-8 h-8 rounded-full bg-[#003820] dark:bg-[#0f5132] text-white flex items-center justify-center shadow-xs hover:opacity-90"
+            title={name || "My Account"}
+          >
+            <span className="material-symbols-outlined text-[18px]">person</span>
+          </Link>
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setIsSheetOpen(true)}
+            className="md:hidden p-1.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+            aria-label="Open mobile menu"
+          >
+            <span className="material-symbols-outlined text-[24px]">menu</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Bottom Category Navigation Row */}
+      <div className="hidden md:block bg-[#f2f3ff] dark:bg-[#09090e] border-t border-slate-150 dark:border-slate-800/80">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 h-10 flex items-center justify-between">
+          <div className="flex items-center gap-4 h-full overflow-x-auto scrollbar-hide">
+            <Link
+              href="/products"
+              className="flex items-center gap-1.5 bg-[#003820] text-white px-3.5 h-full text-xs font-bold shrink-0"
+            >
+              <span className="material-symbols-outlined text-[18px]">menu</span>
+              All Categories
+            </Link>
+
+            <nav className="flex items-center gap-4 h-full text-xs">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.label}
+                  href={cat.href}
+                  className="h-full flex items-center text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-white font-semibold transition-colors whitespace-nowrap"
+                >
+                  {cat.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <Link
+            href="/products?filter=hot-deals"
+            className="flex items-center gap-1 text-xs font-bold text-[#fd651e] hover:text-[#a73a00] shrink-0"
+          >
+            <span>Daily Hot Deals</span>
+            <span className="material-symbols-outlined text-[18px] text-[#fd651e]">
+              local_fire_department
+            </span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Mobile Drawer */}
+      <NavMobileDrawer
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        token={token}
+        name={name}
+        onLogout={handleLogout}
+      />
     </header>
   );
 }
