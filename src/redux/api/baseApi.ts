@@ -47,6 +47,7 @@ export const baseApi = createApi({
     "Cart",
     "Address",
     "Slider",
+    "Banner",
   ],
   endpoints: () => ({}),
 });

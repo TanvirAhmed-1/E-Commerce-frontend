@@ -156,3 +156,16 @@ export async function getHomeSlidersServer() {
     retries: 2, // 2 retries on failure
   });
 }
+
+/**
+ * Server-side promotional banners fetching helper with 1-minute revalidation
+ */
+export async function getHomeBannersServer() {
+  return customFetch<any[]>("/banners", {
+    revalidate: 60,
+    tags: ["banners", "promotional-banners"],
+    timeout: 8000,
+    retries: 2,
+  });
+}
+
