@@ -1,8 +1,9 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useState, useEffect, useMemo } from "react";
 import { useGetAllProductsQuery } from "@/redux/features/product/productApi";
 import { useAddToCartMutation } from "@/redux/features/cart/cartApi";
+import { useGetMenuCategoryQuery } from "@/redux/features/home/homeApi";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -13,6 +14,7 @@ import CatalogFilterSidebar from "@/components/ui/catalog/CatalogFilterSidebar";
 import CatalogToolbar from "@/components/ui/catalog/CatalogToolbar";
 import CatalogProductGrid from "@/components/ui/catalog/CatalogProductGrid";
 import CatalogPagination from "@/components/ui/catalog/CatalogPagination";
+import CategorySeoFooter from "@/components/ui/catalog/CategorySeoFooter";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
@@ -20,11 +22,11 @@ function ProductsContent() {
   const { token, customerType } = useSelector((state: RootState) => state.auth);
   const [addToCartApi] = useAddToCartMutation();
 
-  const categoryParam = searchParams.get("category") || "Plastic Household";
+  const categoryParam = searchParams.get("category") || "";
   const search = searchParams.get("search") || "";
   const page = Number(searchParams.get("page") || "1");
 
-  const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam);
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam || "All Products");
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
@@ -32,10 +34,52 @@ function ProductsContent() {
   const [sortBy, setSortBy] = useState<string>("-createdAt");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  // Keep selectedCategory in sync with URL searchParams
+  useEffect(() => {
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    } else {
+      setSelectedCategory("All Products");
+    }
+  }, [categoryParam]);
+
+  // Load category tree to match title, banner, subtitle, and SEO description
+  const { data: categoriesRes } = useGetMenuCategoryQuery(undefined);
+  const categoriesList = categoriesRes?.data || [];
+
+  const matchedCategory = useMemo(() => {
+    if (!selectedCategory || selectedCategory === "All Products" || !Array.isArray(categoriesList)) return null;
+    const target = selectedCategory.toLowerCase().trim();
+
+    const findInTree = (nodes: any[]): any => {
+      for (const node of nodes) {
+        const nameMatch = node.name && node.name.toLowerCase().trim() === target;
+        const slugMatch = node.slug && node.slug.toLowerCase().trim() === target;
+        const nameSlugMatch = node.name && node.name.toLowerCase().trim().replace(/\s+/g, "-") === target;
+        const targetSlugMatch = target.replace(/[-_]/g, " ") === (node.name || "").toLowerCase().trim();
+        const idMatch = node._id && node._id === selectedCategory;
+
+        if (nameMatch || slugMatch || nameSlugMatch || targetSlugMatch || idMatch) {
+          return node;
+        }
+        if (node.children && node.children.length > 0) {
+          const found = findInTree(node.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    return findInTree(categoriesList);
+  }, [selectedCategory, categoriesList]);
+
   const [minPrice, maxPrice] = selectedPriceRange ? selectedPriceRange.split("-") : ["", ""];
 
   const { data: productsData, isLoading } = useGetAllProductsQuery({
-    category: selectedCategory !== "All Categories" ? selectedCategory : undefined,
+    category:
+      selectedCategory && selectedCategory !== "All Products" && selectedCategory !== "All Categories"
+        ? matchedCategory?.slug || matchedCategory?.name || selectedCategory
+        : undefined,
     searchTerm: search || undefined,
     page,
     limit: 12,
@@ -46,6 +90,11 @@ function ProductsContent() {
 
   const products = productsData?.data?.data || [];
   const meta = productsData?.data?.meta || { page: 1, limit: 12, total: products.length || 12, totalPage: 1 };
+
+  const handleCategorySelect = (cat: string) => {
+    setSelectedCategory(cat);
+    router.push(`/products?category=${encodeURIComponent(cat.toLowerCase().replace(/\s+/g, "-"))}`);
+  };
 
   const handleAddToCart = async (e: React.MouseEvent, product: any) => {
     e.preventDefault();
@@ -73,19 +122,23 @@ function ProductsContent() {
   };
 
   const handleClearFilters = () => {
-    setSelectedCategory("Plastic Household");
+    setSelectedCategory("All Products");
     setSelectedPriceRange("");
     setSelectedBrand("");
     setInStockOnly(false);
     setSelectedRating(0);
+    router.push("/products");
   };
 
   return (
     <div className="w-full flex flex-col gap-6">
-      {/* 1. Category Banner */}
+      {/* 1. Category Hero Banner (Wide Banner matching 2nd image) */}
       <CatalogBanner
-        categoryTitle={selectedCategory || "Household & Kitchen Products"}
-        categorySubtitle="Durable and useful products for your everyday home needs. Quality you can trust."
+        categoryName={matchedCategory?.name || (selectedCategory !== "All Products" ? selectedCategory : "All Products")}
+        categoryTitle={matchedCategory?.title || matchedCategory?.name || (selectedCategory !== "All Products" ? selectedCategory : "Explore All Products")}
+        categorySubtitle={matchedCategory?.subtitle}
+        categoryBanner={matchedCategory?.banner}
+        categoryImage={matchedCategory?.image || matchedCategory?.thumbnail}
       />
 
       {/* 2. Main Content Layout (Sidebar + Product Grid) */}
@@ -94,8 +147,9 @@ function ProductsContent() {
           {/* Left Filter Sidebar */}
           <div className="lg:col-span-3">
             <CatalogFilterSidebar
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
+              categoriesList={categoriesList}
+              selectedCategory={matchedCategory?.name || selectedCategory}
+              onSelectCategory={handleCategorySelect}
               selectedPriceRange={selectedPriceRange}
               onSelectPriceRange={setSelectedPriceRange}
               selectedBrand={selectedBrand}
@@ -135,6 +189,13 @@ function ProductsContent() {
           </div>
         </div>
       </div>
+
+      {/* 3. Category SEO Description Section (Footer Area) */}
+      <CategorySeoFooter
+        categoryName={matchedCategory?.name || selectedCategory}
+        categoryTitle={matchedCategory?.title || matchedCategory?.name || selectedCategory}
+        description={matchedCategory?.description}
+      />
     </div>
   );
 }

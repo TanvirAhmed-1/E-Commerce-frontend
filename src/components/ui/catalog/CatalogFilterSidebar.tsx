@@ -4,6 +4,7 @@ import React from "react";
 import { Star } from "lucide-react";
 
 interface CatalogFilterSidebarProps {
+  categoriesList?: any[];
   selectedCategory: string;
   onSelectCategory: (cat: string) => void;
   selectedPriceRange: string;
@@ -18,6 +19,7 @@ interface CatalogFilterSidebarProps {
 }
 
 export const CatalogFilterSidebar: React.FC<CatalogFilterSidebarProps> = ({
+  categoriesList = [],
   selectedCategory,
   onSelectCategory,
   selectedPriceRange,
@@ -30,12 +32,31 @@ export const CatalogFilterSidebar: React.FC<CatalogFilterSidebarProps> = ({
   onSelectRating,
   onClearFilters,
 }) => {
-  const categories = [
-    "Plastic Household",
-    "Kitchenware",
-    "Rice Cookers",
-    "Storage & Organization",
-  ];
+  // Extract category names from backend category tree or fallback
+  const categories = React.useMemo(() => {
+    if (!categoriesList || categoriesList.length === 0) {
+      return [
+        "Plastic Household",
+        "Kitchenware",
+        "Rice Cookers",
+        "Storage & Organization",
+      ];
+    }
+
+    const names: string[] = [];
+    const extractNames = (nodes: any[]) => {
+      for (const node of nodes) {
+        if (node.name && !names.includes(node.name)) {
+          names.push(node.name);
+        }
+        if (node.children && Array.isArray(node.children)) {
+          extractNames(node.children);
+        }
+      }
+    };
+    extractNames(categoriesList);
+    return names.slice(0, 10);
+  }, [categoriesList]);
 
   const priceRanges = [
     { label: "৳ 0 - ৳ 500", val: "0-500" },
