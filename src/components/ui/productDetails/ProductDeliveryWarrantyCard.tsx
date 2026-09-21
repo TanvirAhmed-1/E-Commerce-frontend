@@ -6,19 +6,19 @@ export const ProductDeliveryWarrantyCard: React.FC = () => {
   return (
     <div className="bg-white dark:bg-[#121320] p-4 md:p-6 rounded-xl shadow-xs border border-slate-100 dark:border-slate-800/80 flex flex-col gap-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        {/* Delivery Assurance Details */}
+        {/* Delivery Details */}
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm">
             <span className="material-symbols-outlined text-[#003820] dark:text-[#95d4ac]">
               local_shipping
             </span>
-            <span>Delivery across Bangladesh</span>
+            <span>Fast Nationwide Delivery</span>
           </div>
 
           <ul className="flex flex-col gap-2 text-xs text-slate-600 dark:text-slate-400">
             <li className="flex items-center justify-between bg-[#f2f3ff] dark:bg-[#09090e] p-2.5 rounded-lg">
               <span className="font-medium text-slate-800 dark:text-slate-300">
-                Inside Dhaka Metropolitan:
+                Inside Dhaka:
               </span>
               <strong className="text-[#003820] dark:text-[#95d4ac] font-bold">
                 24-48 Hours (৳ 60)
@@ -26,7 +26,7 @@ export const ProductDeliveryWarrantyCard: React.FC = () => {
             </li>
             <li className="flex items-center justify-between bg-[#f2f3ff] dark:bg-[#09090e] p-2.5 rounded-lg">
               <span className="font-medium text-slate-800 dark:text-slate-300">
-                Outside Dhaka (All 64 Districts):
+                Outside Dhaka (All Districts):
               </span>
               <strong className="text-[#003820] dark:text-[#95d4ac] font-bold">
                 3-5 Days (৳ 120)
@@ -34,18 +34,18 @@ export const ProductDeliveryWarrantyCard: React.FC = () => {
             </li>
             <li className="flex items-center gap-1.5 text-[#003820] dark:text-[#95d4ac] font-bold text-xs pt-0.5">
               <span className="material-symbols-outlined text-[17px]">check_circle</span>
-              <span>Cash on Delivery Available (Pay when you inspect)</span>
+              <span>Cash on Delivery Available</span>
             </li>
           </ul>
         </div>
 
-        {/* Official Warranty & Policy Assurance */}
+        {/* Quality & Policy Assurance */}
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm">
             <span className="material-symbols-outlined text-[#003820] dark:text-[#95d4ac]">
               verified
             </span>
-            <span>Prestige Brand Warranty</span>
+            <span>Buyer Protection & Guarantee</span>
           </div>
 
           <div className="flex flex-col gap-2 text-xs text-slate-600 dark:text-slate-400">
@@ -54,15 +54,7 @@ export const ProductDeliveryWarrantyCard: React.FC = () => {
                 workspace_premium
               </span>
               <span className="text-slate-800 dark:text-slate-300">
-                <strong>1 Year 100% Replacement Warranty</strong> on heating element & electrical switchboard.
-              </span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="material-symbols-outlined text-[#003820] dark:text-[#95d4ac] text-[18px] shrink-0 mt-0.5">
-                build_circle
-              </span>
-              <span className="text-slate-800 dark:text-slate-300">
-                <strong>2 Years Free Service Warranty</strong> at any certified GhorBazar service center.
+                <strong>100% Genuine Products</strong> sourced directly from authorized distributors.
               </span>
             </div>
             <div className="flex items-start gap-2">
@@ -73,11 +65,19 @@ export const ProductDeliveryWarrantyCard: React.FC = () => {
                 <strong>7 Days Easy Return</strong> if defective or damaged upon unboxing.
               </span>
             </div>
+            <div className="flex items-start gap-2">
+              <span className="material-symbols-outlined text-[#003820] dark:text-[#95d4ac] text-[18px] shrink-0 mt-0.5">
+                security
+              </span>
+              <span className="text-slate-800 dark:text-slate-300">
+                <strong>Official Brand Warranty</strong> backed by verified service support.
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Accepted Payment Methods Badges */}
+      {/* Accepted Payment Methods */}
       <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
@@ -107,7 +107,7 @@ export const ProductDeliveryWarrantyCard: React.FC = () => {
 
         <div className="flex items-center gap-1 text-[11px] text-[#003820] dark:text-[#95d4ac] font-semibold">
           <span className="material-symbols-outlined text-[16px]">lock</span>
-          <span>256-Bit SSL Encrypted</span>
+          <span>SSL 256-Bit Encrypted Secure Checkout</span>
         </div>
       </div>
     </div>

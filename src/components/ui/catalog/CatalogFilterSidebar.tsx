@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 
 interface CatalogFilterSidebarProps {
   categoriesList?: any[];
+  availableBrands?: string[];
   selectedCategory: string;
   onSelectCategory: (cat: string) => void;
   selectedPriceRange: string;
@@ -20,6 +21,7 @@ interface CatalogFilterSidebarProps {
 
 export const CatalogFilterSidebar: React.FC<CatalogFilterSidebarProps> = ({
   categoriesList = [],
+  availableBrands = [],
   selectedCategory,
   onSelectCategory,
   selectedPriceRange,
@@ -32,15 +34,10 @@ export const CatalogFilterSidebar: React.FC<CatalogFilterSidebarProps> = ({
   onSelectRating,
   onClearFilters,
 }) => {
-  // Extract category names from backend category tree or fallback
+  // Extract category names dynamically from backend category tree
   const categories = React.useMemo(() => {
     if (!categoriesList || categoriesList.length === 0) {
-      return [
-        "Plastic Household",
-        "Kitchenware",
-        "Rice Cookers",
-        "Storage & Organization",
-      ];
+      return [];
     }
 
     const names: string[] = [];
@@ -55,7 +52,7 @@ export const CatalogFilterSidebar: React.FC<CatalogFilterSidebarProps> = ({
       }
     };
     extractNames(categoriesList);
-    return names.slice(0, 10);
+    return names;
   }, [categoriesList]);
 
   const priceRanges = [
@@ -65,7 +62,7 @@ export const CatalogFilterSidebar: React.FC<CatalogFilterSidebarProps> = ({
     { label: "৳ 2,000+", val: "2000-99999" },
   ];
 
-  const brands = ["RFL Plastics", "Pran Household", "Shine Cookware", "Prestige"];
+  const brands = availableBrands;
 
   return (
     <aside className="w-full bg-white dark:bg-[#121320] rounded-xl p-5 border border-slate-200/70 dark:border-slate-800 shadow-xs flex flex-col gap-5">
@@ -89,6 +86,18 @@ export const CatalogFilterSidebar: React.FC<CatalogFilterSidebarProps> = ({
           Category
         </span>
         <div className="flex flex-col gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+          <label className="flex items-center gap-2 cursor-pointer hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors">
+            <input
+              type="radio"
+              name="category_filter"
+              checked={selectedCategory === "All Products" || selectedCategory === "All Categories" || !selectedCategory}
+              onChange={() => onSelectCategory("All Products")}
+              className="accent-[#003820] cursor-pointer"
+            />
+            <span className={selectedCategory === "All Products" || selectedCategory === "All Categories" || !selectedCategory ? "font-bold text-slate-900 dark:text-white" : ""}>
+              All Categories
+            </span>
+          </label>
           {categories.map((cat) => (
             <label
               key={cat}
@@ -135,30 +144,32 @@ export const CatalogFilterSidebar: React.FC<CatalogFilterSidebarProps> = ({
         </div>
       </div>
 
-      {/* 3. Brand */}
-      <div className="flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
-        <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-          Brand
-        </span>
-        <div className="flex flex-col gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-          {brands.map((b) => (
-            <label
-              key={b}
-              className="flex items-center gap-2 cursor-pointer hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors"
-            >
-              <input
-                type="checkbox"
-                checked={selectedBrand === b}
-                onChange={() => onSelectBrand(selectedBrand === b ? "" : b)}
-                className="accent-[#003820] cursor-pointer rounded"
-              />
-              <span className={selectedBrand === b ? "font-bold text-slate-900 dark:text-white" : ""}>
-                {b}
-              </span>
-            </label>
-          ))}
+      {/* 3. Brand (Dynamic) */}
+      {brands.length > 0 && (
+        <div className="flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+          <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+            Brand
+          </span>
+          <div className="flex flex-col gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+            {brands.map((b) => (
+              <label
+                key={b}
+                className="flex items-center gap-2 cursor-pointer hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedBrand === b}
+                  onChange={() => onSelectBrand(selectedBrand === b ? "" : b)}
+                  className="accent-[#003820] cursor-pointer rounded"
+                />
+                <span className={selectedBrand === b ? "font-bold text-slate-900 dark:text-white" : ""}>
+                  {b}
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 4. Availability */}
       <div className="flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">

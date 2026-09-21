@@ -1,72 +1,89 @@
 "use client";
 
 import React from "react";
+import { useProductContext } from "./ProductContext";
+import { Sparkles, CheckCircle2, ShieldCheck } from "lucide-react";
 
-interface ProductDescriptionTabProps {
-  customDescriptionHtml?: string;
-  shortDescription?: string;
-}
+export const ProductDescriptionTab: React.FC = () => {
+  const { product } = useProductContext();
 
-export const ProductDescriptionTab: React.FC<ProductDescriptionTabProps> = ({
-  customDescriptionHtml,
-  shortDescription,
-}) => {
+  const customDescriptionHtml = product?.description;
+  const shortDescription = product?.shortDescription;
+  const keyFeatures: string[] = product?.keyFeatures || [];
+
+  if (!customDescriptionHtml && !shortDescription && keyFeatures.length === 0) {
+    return (
+      <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-sm">
+        No detailed description available for this product.
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
-        <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          Engineered for Authentic Bangladeshi Home Cooking
-        </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-          The Prestige Deluxe Duo-Pot Electric Rice Cooker & Steamer (2.8L) is built to handle everyday culinary demands with immaculate precision. Whether you are boiling long-grain aromatic Chinigura, Miniket, or royal Basmati rice for family dinners, or preparing flavorful Bengali Khichuri and Dum Biryani, this high-wattage cooker ensures uniformly cooked, fluffy grains every single batch.
-        </p>
-      </div>
-
-      {/* Feature Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-2">
-        <div className="bg-[#f2f3ff] dark:bg-[#09090e] p-5 rounded-xl flex flex-col gap-2 border border-slate-100 dark:border-slate-800/80">
-          <div className="w-10 h-10 rounded-lg bg-[#003820] text-white flex items-center justify-center font-bold">
-            <span className="material-symbols-outlined text-[24px]">soup_kitchen</span>
+    <div className="max-w-5xl flex flex-col gap-8 animate-fade-in">
+      {/* Short Summary Banner */}
+      {shortDescription && (
+        <div className="p-4 md:p-5 rounded-2xl bg-gradient-to-r from-[#f2f3ff] to-emerald-50/40 dark:from-[#09090e] dark:to-emerald-950/20 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3.5 shadow-2xs">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+            <Sparkles size={16} />
           </div>
-          <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-            Simultaneous Dual-Deck Steaming
-          </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            Take advantage of the included food-grade steamer basket. Steam healthy dumplings, momos, vegetables, eggs, or fresh river fish simultaneously while your staple rice or lentil soup gently cooks below.
-          </p>
-        </div>
-
-        <div className="bg-[#f2f3ff] dark:bg-[#09090e] p-5 rounded-xl flex flex-col gap-2 border border-slate-100 dark:border-slate-800/80">
-          <div className="w-10 h-10 rounded-lg bg-[#003820] text-white flex items-center justify-center font-bold">
-            <span className="material-symbols-outlined text-[24px]">restaurant_menu</span>
+          <div className="flex-1">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Product Overview & Specifications
+            </h4>
+            {/<[a-z][\s\S]*>/i.test(shortDescription) ? (
+              <div
+                className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed prose dark:prose-invert max-w-none prose-p:leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: shortDescription }}
+              />
+            ) : (
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
+                {shortDescription}
+              </p>
+            )}
           </div>
-          <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-            Two Specialized Inner Pots Included
-          </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            Equipped with both a heavy-gauge Hard Anodized Aluminum inner pot for stews and firm rice, plus a multi-layer Teflon non-stick coated pot ideal for delicate pulao and easy hand-wash cleans.
-          </p>
         </div>
-      </div>
+      )}
 
-      {/* Safety Circuitry */}
-      <div className="flex flex-col gap-2">
-        <h3 className="font-bold text-base text-slate-900 dark:text-white">
-          Advanced Triple Safety Circuitry
-        </h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-          Engineered specifically with voltage fluctuation safeguards tailored for local power conditions. Features an automatic thermal cut-off fuse that halts power if temperatures exceed optimal limits, alongside heavy-duty insulated power wiring and a vapor relief valve on the tempered glass lid.
-        </p>
-      </div>
+      {/* KEY FEATURES & BULLET HIGHLIGHTS (MATCHING IMAGE 3) */}
+      {keyFeatures.length > 0 && (
+        <div className="p-5 md:p-6 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 shadow-xs space-y-4">
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-600 text-white text-xs font-black shadow-xs">
+              ✓
+            </span>
+            <h3 className="text-sm md:text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Key Features & Specifications
+            </h3>
+          </div>
 
-      {/* Dynamic Content if provided from API */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            {keyFeatures.map((feat, idx) => (
+              <div
+                key={idx}
+                className="flex items-start gap-3 p-3.5 rounded-xl bg-white/90 dark:bg-[#121320] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-emerald-500/40 transition-all group"
+              >
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold select-none text-base leading-none shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
+                  ✅
+                </span>
+                <span className="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
+                  {feat}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* RICH HTML DESCRIPTION */}
       {customDescriptionHtml && (
-        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-          <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">
-            Additional Product Details
-          </h4>
+        <div className="space-y-3">
+          <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <span>Detailed Information</span>
+          </h3>
+
           <div
-            className="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed space-y-2 prose dark:prose-invert max-w-none"
+            className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed prose dark:prose-invert max-w-none prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:leading-relaxed prose-table:border prose-table:border-slate-200 dark:prose-table:border-slate-800 prose-th:bg-slate-100 dark:prose-th:bg-slate-800/80 prose-th:p-2.5 prose-td:p-2.5 prose-td:border prose-td:border-slate-200 dark:prose-td:border-slate-800 prose-img:rounded-2xl prose-img:shadow-sm"
             dangerouslySetInnerHTML={{ __html: customDescriptionHtml }}
           />
         </div>

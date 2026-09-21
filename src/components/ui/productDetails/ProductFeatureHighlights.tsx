@@ -10,25 +10,9 @@ interface ProductFeatureHighlightsProps {
 }
 
 export const ProductFeatureHighlights: React.FC<ProductFeatureHighlightsProps> = ({
-  features = [
-    {
-      icon: "bolt",
-      text: "Heavy-duty 1000W heating plate for rapid & uniform cooking",
-    },
-    {
-      icon: "layers",
-      text: "Includes 2 Pots: 1 Teflon Non-stick & 1 Anodized Heavy Pot",
-    },
-    {
-      icon: "soup_kitchen",
-      text: "Auto Keep-Warm feature preserves aroma & heat up to 6 hours",
-    },
-    {
-      icon: "shield",
-      text: "Stainless steel body with cool-touch heat-resistant side handles",
-    },
-  ],
+  features,
 }) => {
+  if (!features || features.length === 0) return null;
   return (
     <ul className="grid grid-cols-1 md:grid-cols-2 gap-2.5 py-1 text-xs text-slate-700 dark:text-slate-300">
       {features.map((item, idx) => (

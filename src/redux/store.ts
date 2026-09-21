@@ -1,7 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { baseApi } from "./api/baseApi";
 import authReducer from "./features/auth/authSlice";
-import storage from "redux-persist/lib/storage";
+import cartReducer from "./features/cart/cartSlice";
+import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 import {
   persistReducer,
   persistStore,
@@ -13,7 +14,24 @@ import {
   REGISTER,
 } from "redux-persist";
 
-import cartReducer from "./features/cart/cartSlice";
+const createNoopStorage = () => {
+  return {
+    getItem(_key: string) {
+      return Promise.resolve(null);
+    },
+    setItem(_key: string, value: any) {
+      return Promise.resolve(value);
+    },
+    removeItem(_key: string) {
+      return Promise.resolve();
+    },
+  };
+};
+
+const storage =
+  typeof window !== "undefined"
+    ? createWebStorage("local")
+    : createNoopStorage();
 
 const authPersistConfig = {
   key: "auth",

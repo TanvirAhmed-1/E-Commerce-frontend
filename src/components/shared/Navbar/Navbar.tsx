@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -12,8 +12,9 @@ import NavbarSearch from "./NavSearch";
 import NavMobileDrawer from "./NavMobileDrawer";
 import { 
   ChevronDown, 
+  ChevronLeft,
+  ChevronRight,
   Layers, 
-  Flame, 
   ArrowRight,
   Menu
 } from "lucide-react";
@@ -30,6 +31,10 @@ interface MenuItem {
 export default function Navbar() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const navScrollRef = useRef<HTMLDivElement>(null);
+
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { token, name } = useAppSelector((state) => state.auth);
@@ -60,6 +65,42 @@ export default function Navbar() {
     }
     return [];
   }, [pagesRes]);
+
+  const checkScroll = useCallback(() => {
+    const el = navScrollRef.current;
+    if (el) {
+      const hasOverflow = el.scrollWidth > el.clientWidth + 2;
+      setCanScrollLeft(el.scrollLeft > 8);
+      setCanScrollRight(hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const timer = setTimeout(checkScroll, 100);
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [navCategories, navPages, checkScroll]);
+
+  const handleScroll = (direction: "left" | "right") => {
+    const el = navScrollRef.current;
+    if (el) {
+      const scrollAmount = direction === "left" ? -280 : 280;
+      el.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const el = navScrollRef.current;
+    if (el && el.scrollWidth > el.clientWidth) {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        el.scrollLeft += e.deltaY;
+      }
+    }
+  };
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -151,12 +192,13 @@ export default function Navbar() {
         <NavbarSearch />
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-5 shrink-0">
+          {/* Track Order */}
           <Link
             href="/dashboard?tab=orders"
-            className="hidden xl:flex flex-col items-center group text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors"
+            className="hidden sm:flex flex-col items-center group text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+            <span className="material-symbols-outlined text-[22px]">local_shipping</span>
             <span className="text-[10px] font-semibold mt-0.5">Track Order</span>
           </Link>
 
@@ -176,29 +218,20 @@ export default function Navbar() {
             <span className="text-[10px] font-semibold mt-0.5 hidden sm:inline">Wishlist</span>
           </Link>
 
-          {/* Cart preview */}
+          {/* Cart */}
           <Link
             href="/cart"
-            className="flex items-center gap-2 bg-[#f2f3ff] dark:bg-[#121320] px-3 py-1.5 rounded-lg hover:bg-[#eaedff] dark:hover:bg-slate-800 transition-colors border border-slate-200/60 dark:border-slate-800"
+            className="relative flex flex-col items-center group text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors"
           >
-            <div className="relative flex items-center">
-              <span className="material-symbols-outlined text-[22px] text-[#003820] dark:text-[#95d4ac]">
-                shopping_bag
-              </span>
+            <div className="relative">
+              <span className="material-symbols-outlined text-[22px]">shopping_bag</span>
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-[#a73a00] text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1 -right-2 w-4 h-4 rounded-full bg-[#fd651e] text-white text-[9px] font-bold flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
             </div>
-            <div className="hidden sm:flex flex-col text-left">
-              <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 leading-tight">
-                Cart Total
-              </span>
-              <span className="text-xs font-bold text-[#003820] dark:text-[#95d4ac] leading-none">
-                ৳{cartTotal.toLocaleString("en-US")}
-              </span>
-            </div>
+            <span className="text-[10px] font-semibold mt-0.5 hidden sm:inline">Cart</span>
           </Link>
 
           {/* User Account / Avatar */}
@@ -222,113 +255,119 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* 3. Bottom Category Navigation Row with Multi-Level Dropdowns */}
+      {/* 3. Bottom Category Navigation Row with Horizontal Scroll */}
       <div className="hidden md:block bg-[#f8f9ff] dark:bg-[#09090e] border-t border-slate-200/70 dark:border-slate-800/80">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 h-11 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 h-full">
-            {/* A. "All Categories" Mega Menu Dropdown */}
-            <div className="relative group h-full">
-              <button
-                type="button"
-                className="flex items-center gap-2 bg-[#003820] hover:bg-[#004d2c] text-white px-4 h-full text-xs font-bold shrink-0 transition-colors cursor-pointer select-none rounded-t-sm"
-              >
-                <Layers size={15} />
-                <span>All Categories</span>
-                <ChevronDown size={14} className="transition-transform duration-300 group-hover:rotate-180" />
-              </button>
+        <div className="max-w-7xl mx-auto px-4 md:px-8 h-11 flex items-center gap-3">
+          {/* A. "All Categories" Mega Menu Dropdown (Fixed on Left) */}
+          <div className="relative group h-full shrink-0 z-20">
+            <Link
+              href="/products"
+              className="flex items-center gap-2 bg-[#003820] hover:bg-[#004d2c] text-white px-4 h-full text-xs font-bold shrink-0 transition-colors cursor-pointer select-none rounded-t-sm"
+            >
+              <Layers size={15} />
+              <span>All Categories</span>
+              <ChevronDown size={14} className="transition-transform duration-300 group-hover:rotate-180" />
+            </Link>
 
-              {/* All Categories Mega Dropdown Menu */}
-              {navCategories.length > 0 && (
-                <div className="absolute left-0 top-full pt-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out z-50 pointer-events-none group-hover:pointer-events-auto">
-                  <div className="bg-white dark:bg-[#121320] rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-5 w-[650px] max-w-[85vw] max-h-[500px] overflow-y-auto custom-scrollbar">
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
-                      {navCategories.map((cat) => {
-                        const hasChildren = Array.isArray(cat.children) && cat.children.length > 0;
-                        const parentHref = `/products?category=${encodeURIComponent(cat.slug || cat.name)}`;
+            {/* All Categories Mega Dropdown Menu */}
+            {navCategories.length > 0 && (
+              <div className="absolute left-0 top-full pt-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out z-50 pointer-events-none group-hover:pointer-events-auto">
+                <div className="bg-white dark:bg-[#121320] rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] p-5 w-[650px] max-w-[85vw] max-h-[500px] overflow-y-auto custom-scrollbar">
+                  {/* Top Bar with All Products Link */}
+                  <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-150 dark:border-slate-800">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Categories
+                    </span>
+                    <Link
+                      href="/products"
+                      className="text-xs font-bold text-[#003820] dark:text-[#95d4ac] hover:underline flex items-center gap-1.5"
+                    >
+                      <span>View All Products</span>
+                      <ArrowRight size={12} />
+                    </Link>
+                  </div>
 
-                        return (
-                          <div key={cat._id} className="space-y-2">
-                            <Link
-                              href={parentHref}
-                              className="font-extrabold text-xs uppercase tracking-wider text-[#003820] dark:text-[#95d4ac] hover:underline flex items-center gap-1.5"
-                            >
-                              <span>{cat.name}</span>
-                              <ArrowRight size={11} className="opacity-60" />
-                            </Link>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
+                    {navCategories.map((cat) => {
+                      const hasChildren = Array.isArray(cat.children) && cat.children.length > 0;
+                      const parentHref = `/products?category=${encodeURIComponent(cat.slug || cat.name)}`;
 
-                            {hasChildren && (
-                              <ul className="space-y-1 pl-1">
-                                {cat.children!.slice(0, 6).map((subCat) => (
-                                  <li key={subCat._id}>
-                                    <Link
-                                      href={`/products?category=${encodeURIComponent(subCat.slug || subCat.name)}`}
-                                      className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-white transition-colors block py-0.5 hover:translate-x-1 duration-150"
-                                    >
-                                      {subCat.name}
-                                    </Link>
-                                  </li>
-                                ))}
-                                {cat.children!.length > 6 && (
-                                  <li>
-                                    <Link
-                                      href={parentHref}
-                                      className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline block pt-1"
-                                    >
-                                      +{cat.children!.length - 6} more...
-                                    </Link>
-                                  </li>
-                                )}
-                              </ul>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                      return (
+                        <div key={cat._id} className="space-y-2">
+                          <Link
+                            href={parentHref}
+                            className="font-extrabold text-xs uppercase tracking-wider text-[#003820] dark:text-[#95d4ac] hover:underline flex items-center gap-1.5"
+                          >
+                            <span>{cat.name}</span>
+                            <ArrowRight size={11} className="opacity-60" />
+                          </Link>
+
+                          {hasChildren && (
+                            <ul className="space-y-1 pl-1">
+                              {cat.children!.slice(0, 6).map((subCat) => (
+                                <li key={subCat._id}>
+                                  <Link
+                                    href={`/products?category=${encodeURIComponent(subCat.slug || subCat.name)}`}
+                                    className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-white transition-colors block py-0.5 hover:translate-x-1 duration-150"
+                                  >
+                                    {subCat.name}
+                                  </Link>
+                                </li>
+                              ))}
+                              {cat.children!.length > 6 && (
+                                <li>
+                                  <Link
+                                    href={parentHref}
+                                    className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline block pt-1"
+                                  >
+                                    +{cat.children!.length - 6} more...
+                                  </Link>
+                                </li>
+                              )}
+                            </ul>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
-            {/* B. Dynamic Horizontal Parent Category Links with Subcategory Hover Dropdowns */}
-            <nav className="flex items-center gap-1 h-full pl-2">
-              {navCategories.slice(0, 7).map((cat) => {
-                const hasChildren = Array.isArray(cat.children) && cat.children.length > 0;
+          {/* B. Dynamic Horizontal Scrollable Category & Page Strip */}
+          <div className="relative flex-1 min-w-0 h-full flex items-center overflow-hidden">
+            {/* Scroll Left Button */}
+            {canScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 bg-gradient-to-r from-[#f8f9ff] via-[#f8f9ff]/95 to-transparent dark:from-[#09090e] dark:via-[#09090e]/95">
+                <button
+                  type="button"
+                  onClick={() => handleScroll("left")}
+                  className="w-6 h-6 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-[#003820] dark:hover:text-white hover:bg-slate-50 transition-all cursor-pointer"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Scrollable Category Nav */}
+            <div
+              ref={navScrollRef}
+              onScroll={checkScroll}
+              onWheel={handleWheel}
+              className="flex items-center gap-1 h-full w-full overflow-x-auto scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-1"
+            >
+              {navCategories.map((cat) => {
                 const parentHref = `/products?category=${encodeURIComponent(cat.slug || cat.name)}`;
-
                 return (
-                  <div key={cat._id} className="relative group h-full flex items-center">
-                    <Link
-                      href={parentHref}
-                      className="h-full flex items-center gap-1 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors whitespace-nowrap"
-                    >
-                      <span>{cat.name}</span>
-                      {hasChildren && (
-                        <ChevronDown
-                          size={13}
-                          className="transition-transform duration-200 group-hover:rotate-180 text-slate-400 group-hover:text-[#003820] dark:group-hover:text-[#95d4ac]"
-                        />
-                      )}
-                    </Link>
-
-                    {/* Subcategory Dropdown Panel */}
-                    {hasChildren && (
-                      <div className="absolute left-0 top-full pt-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out z-50 pointer-events-none group-hover:pointer-events-auto">
-                        <div className="bg-white dark:bg-[#121320] rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-[0_15px_35px_rgba(0,0,0,0.12)] dark:shadow-[0_15px_35px_rgba(0,0,0,0.5)] p-2 min-w-[200px]">
-                          <div className="space-y-0.5">
-                            {cat.children!.map((subCat) => (
-                              <Link
-                                key={subCat._id}
-                                href={`/products?category=${encodeURIComponent(subCat.slug || subCat.name)}`}
-                                className="block px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-[#f2f3ff] dark:hover:bg-slate-800/80 hover:text-[#003820] dark:hover:text-[#95d4ac] rounded-lg transition-colors"
-                              >
-                                {subCat.name}
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <Link
+                    key={cat._id}
+                    href={parentHref}
+                    className="h-full flex items-center px-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-[#003820] dark:hover:text-[#95d4ac] hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xs transition-colors whitespace-nowrap shrink-0"
+                  >
+                    {cat.name}
+                  </Link>
                 );
               })}
 
@@ -337,22 +376,27 @@ export default function Navbar() {
                 <Link
                   key={page._id}
                   href={`/${page.slug}`}
-                  className="h-full flex items-center px-3 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-[#95d4ac] transition-colors whitespace-nowrap"
+                  className="h-full flex items-center px-3 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-[#003820] dark:hover:text-[#95d4ac] hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xs transition-colors whitespace-nowrap shrink-0"
                 >
                   {page.title}
                 </Link>
               ))}
-            </nav>
-          </div>
+            </div>
 
-          {/* C. Right Promotional Hot Deals Link */}
-          <Link
-            href="/products?filter=hot-deals"
-            className="flex items-center gap-1.5 text-xs font-extrabold text-[#fd651e] hover:text-[#a73a00] shrink-0 bg-[#fd651e]/10 dark:bg-[#fd651e]/15 px-3 py-1 rounded-full border border-[#fd651e]/20 transition-all hover:scale-105"
-          >
-            <Flame size={14} className="text-[#fd651e]" />
-            <span>Daily Hot Deals</span>
-          </Link>
+            {/* Scroll Right Button */}
+            {canScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 bg-gradient-to-l from-[#f8f9ff] via-[#f8f9ff]/95 to-transparent dark:from-[#09090e] dark:via-[#09090e]/95">
+                <button
+                  type="button"
+                  onClick={() => handleScroll("right")}
+                  className="w-6 h-6 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-[#003820] dark:hover:text-white hover:bg-slate-50 transition-all cursor-pointer"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

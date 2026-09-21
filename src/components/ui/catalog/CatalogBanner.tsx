@@ -13,16 +13,19 @@ interface CatalogBannerProps {
 }
 
 export const CatalogBanner: React.FC<CatalogBannerProps> = ({
-  categoryName = "Plastic Household",
+  categoryName = "All Products",
   categoryTitle,
   categorySubtitle,
   categoryBanner,
   categoryImage,
 }) => {
-  const displayTitle = categoryTitle || categoryName || "All Products";
+  const isAll = !categoryName || categoryName === "All Products" || categoryName === "All Categories";
+  const displayTitle = categoryTitle || (isAll ? "Explore All Products" : categoryName);
   const displaySubtitle =
     categorySubtitle ||
-    "Durable and useful products for your everyday home needs. Quality you can trust.";
+    (isAll
+      ? "Discover our complete collection of authentic household appliances, cookware, and kitchenware."
+      : `Explore top quality items in ${categoryName}. Verified authenticity and best value.`);
   const displayImage = categoryBanner || categoryImage;
 
   return (

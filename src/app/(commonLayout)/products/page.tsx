@@ -91,9 +91,25 @@ function ProductsContent() {
   const products = productsData?.data?.data || [];
   const meta = productsData?.data?.meta || { page: 1, limit: 12, total: products.length || 12, totalPage: 1 };
 
+  // Dynamically extract brands from products returned by backend
+  const availableBrands = useMemo(() => {
+    const brandsSet = new Set<string>();
+    products.forEach((p: any) => {
+      const bName = typeof p.brand === "string" ? p.brand : p.brand?.name;
+      if (bName && typeof bName === "string" && bName.trim()) {
+        brandsSet.add(bName.trim());
+      }
+    });
+    return Array.from(brandsSet);
+  }, [products]);
+
   const handleCategorySelect = (cat: string) => {
     setSelectedCategory(cat);
-    router.push(`/products?category=${encodeURIComponent(cat.toLowerCase().replace(/\s+/g, "-"))}`);
+    if (cat === "All Products" || cat === "All Categories" || !cat) {
+      router.push("/products");
+    } else {
+      router.push(`/products?category=${encodeURIComponent(cat.toLowerCase().replace(/\s+/g, "-"))}`);
+    }
   };
 
   const handleAddToCart = async (e: React.MouseEvent, product: any) => {
@@ -148,6 +164,7 @@ function ProductsContent() {
           <div className="lg:col-span-3">
             <CatalogFilterSidebar
               categoriesList={categoriesList}
+              availableBrands={availableBrands}
               selectedCategory={matchedCategory?.name || selectedCategory}
               onSelectCategory={handleCategorySelect}
               selectedPriceRange={selectedPriceRange}
