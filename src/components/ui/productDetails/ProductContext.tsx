@@ -57,27 +57,52 @@ export const ProductProvider: React.FC<{
 
       const initial: Record<string, string> = {};
       defaultVariant?.attributes?.forEach((attr: any) => {
-        const name = attr.attribute?.name;
+        const name = attr.attribute?.name || attr.name;
         if (name) {
           const paramKey = name.toLowerCase().replace(/\s+/g, "_");
           initial[name] = searchParams.get(paramKey) || attr.value;
         }
       });
+
+      // Ensure all variantAttributes keys are initialized
+      if (product.variantAttributes && Array.isArray(product.variantAttributes)) {
+        product.variantAttributes.forEach((va: any) => {
+          if (va.name && !initial[va.name] && Array.isArray(va.values) && va.values.length > 0) {
+            initial[va.name] = va.values[0];
+          }
+        });
+      }
+
       setSelectedOptions(initial);
     }
   }, [product, searchParams]);
 
   // Match the currently selected variant
   const selectedVariant = useMemo(() => {
-    if (!product?.hasVariants || !product.productVariants) return null;
+    if (!product?.hasVariants || !product.productVariants || !Array.isArray(product.productVariants)) return null;
+
+    const normalizedSelected: Record<string, string> = {};
+    Object.entries(selectedOptions).forEach(([key, val]) => {
+      if (key && val) {
+        normalizedSelected[key.trim().toLowerCase()] = val.trim().toLowerCase();
+      }
+    });
+
     return (
-      product.productVariants.find(
-        (variant: any) =>
-          variant.isActive &&
-          variant.attributes?.every(
-            (attr: any) => selectedOptions[attr.attribute?.name] === attr.value
-          )
-      ) || null
+      product.productVariants.find((variant: any) => {
+        if (!variant.isActive) return false;
+        if (!variant.attributes || !Array.isArray(variant.attributes)) return false;
+
+        return variant.attributes.every((attr: any) => {
+          const attrName = (attr.attribute?.name || attr.name || "").trim().toLowerCase();
+          if (!attrName) return true;
+
+          const selectedVal = normalizedSelected[attrName];
+          if (!selectedVal) return false;
+
+          return selectedVal === attr.value?.trim().toLowerCase();
+        });
+      }) || null
     );
   }, [product, selectedOptions]);
 
@@ -90,11 +115,21 @@ export const ProductProvider: React.FC<{
 
   // Compute unique attributes for variant selector
   const uniqueAttributes = useMemo(() => {
+    if (product?.variantAttributes && Array.isArray(product.variantAttributes) && product.variantAttributes.length > 0) {
+      const result: Record<string, string[]> = {};
+      product.variantAttributes.forEach((va: any) => {
+        if (va.name && Array.isArray(va.values)) {
+          result[va.name] = va.values;
+        }
+      });
+      return result;
+    }
+
     const map: Record<string, Set<string>> = {};
     product?.productVariants?.forEach((variant: any) => {
       if (!variant.isActive) return;
       variant.attributes?.forEach((attr: any) => {
-        const name = attr.attribute?.name;
+        const name = attr.attribute?.name || attr.name;
         if (name && attr.value) {
           if (!map[name]) map[name] = new Set<string>();
           map[name].add(attr.value);
@@ -120,16 +155,41 @@ export const ProductProvider: React.FC<{
   }, [product, selectedVariant]);
 
   // Stock & Pricing calculations
-  const maxStock = product?.hasVariants ? selectedVariant?.stock || 0 : product?.totalStock ?? 0;
-  const isOutOfStock = maxStock === 0;
+  const maxStock = product?.hasVariants ? (selectedVariant?.stock ?? 0) : (product?.totalStock ?? 0);
+  const isOutOfStock = maxStock <= 0 || (Boolean(product?.hasVariants) && !selectedVariant);
   const currentPrice = product ? getDisplayPrice(product, customerType, selectedVariant) : 0;
   const rawOriginalPrice = product?.hasVariants && selectedVariant?.price ? selectedVariant.price : product?.basePrice;
   const originalPrice = rawOriginalPrice && rawOriginalPrice > currentPrice ? rawOriginalPrice : undefined;
   const discountPercentage = product?.productDiscount && product.productDiscount > 0 ? product.productDiscount : undefined;
 
   const selectOption = (attrName: string, value: string) => {
-    setSelectedOptions((prev) => ({ ...prev, [attrName]: value }));
+    setSelectedOptions((prev) => {
+      const updated = { ...prev };
+      const existingKey = Object.keys(updated).find(
+        (k) => k.trim().toLowerCase() === attrName.trim().toLowerCase()
+      );
+      if (existingKey) {
+        updated[existingKey] = value;
+      } else {
+        updated[attrName] = value;
+      }
+      return updated;
+    });
     setQuantity(1);
+
+    if (product?.productVariants) {
+      const match = product.productVariants.find((v: any) =>
+        v.isActive !== false &&
+        v.attributes?.some((a: any) =>
+          (a.attribute?.name || a.name || "").toString().trim().toLowerCase() === attrName.trim().toLowerCase() &&
+          a.value?.toString().trim().toLowerCase() === value.trim().toLowerCase()
+        ) &&
+        v.images?.[0]
+      );
+      if (match?.images?.[0]) {
+        setActiveImage(match.images[0]);
+      }
+    }
   };
 
   const handleQuantityChange = (type: "plus" | "minus") => {
@@ -144,9 +204,22 @@ export const ProductProvider: React.FC<{
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       return;
     }
-    if (!product || isOutOfStock) return;
+    if (!product) return;
 
-    const variantId = selectedVariant?._id || product._id;
+    if (product?.hasVariants && !selectedVariant) {
+      toast.error("Please select a valid product variant.");
+      return;
+    }
+
+    if (isOutOfStock || maxStock <= 0) {
+      toast.error(product?.hasVariants ? "This product variant is currently out of stock." : "This product is currently out of stock.");
+      return;
+    }
+
+    const variantId = product?.hasVariants
+      ? selectedVariant?._id
+      : (product?.productVariants?.[0]?._id || product?._id);
+
     try {
       await addToCartApi({ product: product._id, variant: variantId, quantity }).unwrap();
       toast.success(`${quantity}x ${product.name} added to cart!`);
@@ -161,10 +234,25 @@ export const ProductProvider: React.FC<{
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       return;
     }
-    if (isOutOfStock) return;
+    if (isOutOfStock || maxStock <= 0) {
+      toast.error(product?.hasVariants ? "This product variant is currently out of stock." : "This product is currently out of stock.");
+      return;
+    }
+    if (product?.hasVariants && !selectedVariant) {
+      toast.error("Please select a valid product variant.");
+      return;
+    }
 
-    await handleAddToCart();
-    router.push("/checkout");
+    const variantId = product?.hasVariants
+      ? selectedVariant?._id
+      : (product?.productVariants?.[0]?._id || product?._id);
+
+    try {
+      await addToCartApi({ product: product._id, variant: variantId, quantity }).unwrap();
+      router.push("/checkout");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to proceed to checkout.");
+    }
   };
 
   const value = {

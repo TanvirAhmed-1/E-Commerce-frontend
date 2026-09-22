@@ -38,29 +38,14 @@ export const ProductHeaderInfo: React.FC<{ onReviewsClick?: () => void }> = ({ o
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Category / Brand Badge & Stock Status */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {tag && (
+      {/* Category / Brand Badge */}
+      {tag && (
+        <div className="flex items-center">
           <span className="bg-[#eaedff] dark:bg-[#1e1e38] px-2.5 py-0.5 rounded text-[#003820] dark:text-[#95d4ac] font-bold text-[11px] tracking-wider uppercase">
             {tag}
           </span>
-        )}
-        <div className="flex items-center gap-1.5 text-xs font-bold ml-auto">
-          {!isOutOfStock ? (
-            <>
-              <span className="w-2 h-2 rounded-full bg-[#003820] dark:bg-[#00e5a3] animate-pulse"></span>
-              <span className="text-[#003820] dark:text-[#95d4ac]">
-                In Stock ({maxStock} available)
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="w-2 h-2 rounded-full bg-red-500"></span>
-              <span className="text-red-500 font-bold">Out of Stock</span>
-            </>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Product Title */}
       <h1 className="text-xl md:text-2xl lg:text-[24px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug">

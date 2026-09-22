@@ -6,6 +6,8 @@ import { useProductContext } from "./ProductContext";
 
 export const ProductQuantityAndActions: React.FC = () => {
   const {
+    product,
+    selectedVariant,
     quantity,
     handleQuantityChange,
     maxStock,
@@ -35,6 +37,43 @@ export const ProductQuantityAndActions: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-3 pt-2">
+      {/* Dynamic Variant Stock & Availability Bar */}
+      <div className="flex items-center justify-between bg-[#f2f3ff] dark:bg-[#09090e] px-3.5 py-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800/80 text-xs">
+        <div className="flex items-center gap-2">
+          {!isOutOfStock ? (
+            <>
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
+              </span>
+              <span className="text-slate-800 dark:text-slate-200 font-bold">
+                Availability:{" "}
+                <span className="text-[#003820] dark:text-[#95d4ac] font-extrabold">
+                  In Stock ({maxStock} {maxStock === 1 ? "unit" : "units"} available)
+                </span>
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+              <span className="text-red-600 dark:text-red-400 font-bold">
+                Availability: <span className="font-extrabold">Currently Out of Stock</span>
+              </span>
+            </>
+          )}
+        </div>
+
+        {selectedVariant?.sku ? (
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono tracking-tight hidden sm:inline-block">
+            SKU: {selectedVariant.sku}
+          </span>
+        ) : product?.sku ? (
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono tracking-tight hidden sm:inline-block">
+            SKU: {product.sku}
+          </span>
+        ) : null}
+      </div>
+
       {/* Quantity Stepper & CTA Row */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         {/* Stepper */}

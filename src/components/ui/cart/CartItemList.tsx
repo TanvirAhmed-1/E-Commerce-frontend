@@ -50,9 +50,27 @@ export const CartItemList: React.FC<CartItemListProps> = ({
                 </Link>
 
                 {variant && (
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Variant: {variant.name || "Selected Variant"}
-                  </span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {variant.attributes && Array.isArray(variant.attributes) && variant.attributes.length > 0 ? (
+                      variant.attributes.map((attr: any, idx: number) => {
+                        const name = attr.attribute?.name || attr.name;
+                        return (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center bg-[#eaedff] dark:bg-[#1e1e38] text-[#003820] dark:text-[#95d4ac] text-[10px] font-semibold px-2 py-0.5 rounded"
+                          >
+                            {name ? `${name}: ` : ""}{attr.value}
+                          </span>
+                        );
+                      })
+                    ) : variant.sku ? (
+                      <span className="text-[10px] text-slate-500">{variant.sku}</span>
+                    ) : (
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {variant.name || "Default Variant"}
+                      </span>
+                    )}
+                  </div>
                 )}
 
                 <div className="flex items-baseline gap-2 mt-1">
