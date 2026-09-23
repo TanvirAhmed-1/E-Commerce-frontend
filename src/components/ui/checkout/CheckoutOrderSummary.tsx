@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { Spinner } from "@/components/ui/spinner";
 
 interface CheckoutOrderSummaryProps {
   items: any[];
@@ -94,8 +95,17 @@ export const CheckoutOrderSummary: React.FC<CheckoutOrderSummaryProps> = ({
         disabled={isPlacingOrder || items.length === 0}
         className="w-full bg-[#003820] hover:bg-[#0f5132] text-white py-3.5 rounded-lg text-xs md:text-sm font-bold shadow-md transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
       >
-        <span>{isPlacingOrder ? "Placing Order..." : "Place Order"}</span>
-        <span className="material-symbols-outlined text-[18px]">lock</span>
+        {isPlacingOrder ? (
+          <>
+            <Spinner className="size-4 text-white animate-spin" />
+            <span>অর্ডার প্রসেস হচ্ছে...</span>
+          </>
+        ) : (
+          <>
+            <span>Place Order</span>
+            <span className="material-symbols-outlined text-[18px]">lock</span>
+          </>
+        )}
       </button>
     </div>
   );

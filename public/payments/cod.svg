@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 90" width="220" height="90">
+  <defs>
+    <linearGradient id="codBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#003e23"/>
+      <stop offset="100%" stop-color="#002414"/>
+    </linearGradient>
+    <linearGradient id="codGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Container -->
+  <rect x="2" y="2" width="216" height="86" rx="14" fill="url(#codBgGrad)"/>
+  <rect x="3" y="3" width="214" height="84" rx="13" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+
+  <!-- Left Icon Group: Delivery Truck + Cash -->
+  <g transform="translate(14, 18)">
+    <!-- Truck Trailer -->
+    <rect x="0" y="4" width="34" height="30" rx="3" fill="#ffffff"/>
+    <!-- Cash Icon on Truck -->
+    <rect x="5" y="11" width="24" height="15" rx="2" fill="url(#codGoldGrad)"/>
+    <circle cx="17" cy="18.5" r="3.5" fill="#003820"/>
+
+    <!-- Truck Cabin -->
+    <path d="M34 14h13c1.5 0 3 1 3.8 2.4l4.5 7.6c.5.8.7 1.7.7 2.6V34H34V14z" fill="#E2E8F0"/>
+    <!-- Cabin Window -->
+    <path d="M38 18h8l4 6h-12v-6z" fill="#0284C7"/>
+    <!-- Front Bumper -->
+    <rect x="52" y="28" width="6" height="6" rx="1" fill="#94A3B8"/>
+
+    <!-- Wheels -->
+    <!-- Back Wheel -->
+    <circle cx="12" cy="36" r="6.5" fill="#0F172A"/>
+    <circle cx="12" cy="36" r="3" fill="#CBD5E1"/>
+    <!-- Front Wheel -->
+    <circle cx="44" cy="36" r="6.5" fill="#0F172A"/>
+    <circle cx="44" cy="36" r="3" fill="#CBD5E1"/>
+
+    <!-- Motion Speed Lines -->
+    <path d="M-6 12h3M-8 20h5M-5 28h2" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Right Text Group -->
+  <g transform="translate(84, 16)">
+    <!-- Big COD letters -->
+    <text x="0" y="27" fill="url(#codGoldGrad)" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="900" letter-spacing="1.5">COD</text>
+    <!-- Subtitle: CASH ON DELIVERY -->
+    <text x="0" y="44" fill="#FFFFFF" font-family="system-ui, -apple-system, sans-serif" font-size="11.5" font-weight="800" letter-spacing="0.8">CASH ON DELIVERY</text>
+    <!-- Small Guarantee Note -->
+    <rect x="0" y="50" width="122" height="12" rx="3" fill="rgba(255,255,255,0.12)"/>
+    <text x="61" y="59" fill="#86EFAC" font-family="system-ui, -apple-system, sans-serif" font-size="7.5" font-weight="700" text-anchor="middle" letter-spacing="0.4">100% SECURE HANDOVER</text>
+  </g>
+</svg>

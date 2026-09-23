@@ -5,24 +5,30 @@ import React from "react";
 interface CheckoutDeliveryMethodProps {
   selectedMethod: "standard" | "express";
   onSelectMethod: (method: "standard" | "express") => void;
+  standardCost?: number;
+  expressCost?: number;
+  estimatedDays?: string;
 }
 
 export const CheckoutDeliveryMethod: React.FC<CheckoutDeliveryMethodProps> = ({
   selectedMethod,
   onSelectMethod,
+  standardCost = 70,
+  expressCost = 120,
+  estimatedDays = "2-4 Days",
 }) => {
   const methods = [
     {
       id: "standard" as const,
-      title: "Standard Delivery (2-3 Days)",
-      cost: 80,
-      description: "Delivered safely by GhorBazar Logistics Hub",
+      title: `Standard Delivery (${estimatedDays})`,
+      cost: standardCost,
+      description: "Delivered safely by Courier Network to your doorstep",
     },
     {
       id: "express" as const,
-      title: "Express Delivery (1-2 Days)",
-      cost: 130,
-      description: "Priority dispatch for urgent household needs",
+      title: "Express Fast Delivery (1-2 Days)",
+      cost: expressCost,
+      description: "Priority express dispatch for urgent orders",
     },
   ];
 

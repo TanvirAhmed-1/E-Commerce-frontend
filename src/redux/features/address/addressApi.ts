@@ -14,6 +14,14 @@ export const addressApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Address"],
     }),
+    updateAddress: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/update-address/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Address"],
+    }),
     deleteAddress: builder.mutation({
       query: (id) => ({
         url: `/delete-address/${id}`,
@@ -27,5 +35,6 @@ export const addressApi = baseApi.injectEndpoints({
 export const {
   useGetMyAddressesQuery,
   useCreateAddressMutation,
+  useUpdateAddressMutation,
   useDeleteAddressMutation,
 } = addressApi;

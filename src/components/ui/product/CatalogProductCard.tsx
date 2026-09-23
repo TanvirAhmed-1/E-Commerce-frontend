@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { getDisplayPrice } from "@/utils/priceHelper";
 import { renderStars } from "@/utils/renderStars";
 
@@ -41,7 +42,7 @@ export const CatalogProductGrid: React.FC<CatalogProductGridProps> = ({
   }
 
   return (
-    <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col gap-3"}>
+    <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2" : "flex flex-col gap-3"}>
       {products.map((prod) => {
         const price = getDisplayPrice(prod, customerType) || prod.salePrice || prod.basePrice;
         const original = prod.basePrice || price;
@@ -50,7 +51,7 @@ export const CatalogProductGrid: React.FC<CatalogProductGridProps> = ({
         return (
           <div
             key={prod._id}
-            className={`bg-white dark:bg-[#121320] rounded-xl p-4 border border-slate-200/70 dark:border-slate-800 shadow-xs hover:shadow-md transition-all flex justify-between group ${
+            className={`bg-white dark:bg-[#121320] rounded-xl p-1 border border-slate-200/70 dark:border-slate-800 shadow-xs hover:shadow-md transition-all flex justify-between group ${
               viewMode === "list" ? "flex-row items-center gap-4" : "flex-col"
             }`}
           >
@@ -59,7 +60,7 @@ export const CatalogProductGrid: React.FC<CatalogProductGridProps> = ({
               className={`flex ${viewMode === "list" ? "flex-row items-center gap-4 flex-1" : "flex-col gap-2"}`}
             >
               <div
-                className={`relative bg-[#f2f3ff] dark:bg-[#09090e] rounded-lg p-3 flex items-center justify-center overflow-hidden shrink-0 ${
+                className={`relative bg-[#f2f3ff] dark:bg-[#09090e] rounded-lg p-1.5 flex items-center justify-center overflow-hidden shrink-0 ${
                   viewMode === "list" ? "w-28 h-28" : "w-full aspect-square"
                 }`}
               >
@@ -68,10 +69,12 @@ export const CatalogProductGrid: React.FC<CatalogProductGridProps> = ({
                     -{discount}%
                   </span>
                 )}
-                <img
+                <Image
                   src={prod.thumbnail || "/placeholder.png"}
-                  alt={prod.name}
-                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                  alt={prod.name || "Product image"}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover rounded-xl p-2 group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
 

@@ -3,13 +3,12 @@
 import React, { useMemo } from "react";
 import {
   FileText,
-  Sparkles,
   ShieldCheck,
   Truck,
   CheckCircle2,
   Headphones,
-  RotateCcw,
 } from "lucide-react";
+import Container from "@/components/shared/Container";
 
 interface CategorySeoFooterProps {
   categoryTitle?: string;
@@ -68,8 +67,9 @@ export const CategorySeoFooter: React.FC<CategorySeoFooterProps> = ({
   }, [description, displayTitle]);
 
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-14">
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-[#0d101e]/80 backdrop-blur-md shadow-sm p-6 sm:p-8 md:p-10 space-y-6">
+    <section className="w-full pt-6 pb-14">
+      <Container>
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-[#0d101e]/80 backdrop-blur-md shadow-sm p-6 sm:p-8 md:p-10 space-y-6">
         {/* Top Accent Gradient Border */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500" />
 
@@ -156,8 +156,9 @@ export const CategorySeoFooter: React.FC<CategorySeoFooterProps> = ({
           </div>
         </div>
       </div>
-    </section>
-  );
+    </Container>
+  </section>
+);
 };
 
 export default CategorySeoFooter;

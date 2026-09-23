@@ -3,10 +3,15 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
-import { useRouter } from "next/navigation";
 import { useGetMyCartQuery, useClearCartMutation } from "@/redux/features/cart/cartApi";
-import { useGetMyAddressesQuery, useCreateAddressMutation } from "@/redux/features/address/addressApi";
+import {
+  useGetMyAddressesQuery,
+  useCreateAddressMutation,
+  useUpdateAddressMutation,
+  useDeleteAddressMutation,
+} from "@/redux/features/address/addressApi";
 import { useCheckoutMutation } from "@/redux/features/order/orderApi";
+import { useGetPublicLocationsQuery } from "@/redux/features/shipping/shippingApi";
 import { clearCart } from "@/redux/features/cart/cartSlice";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
@@ -14,32 +19,48 @@ import Link from "next/link";
 
 import CheckoutSteps from "@/components/ui/checkout/CheckoutSteps";
 import CheckoutShippingAddress from "@/components/ui/checkout/CheckoutShippingAddress";
-import CheckoutDeliveryMethod from "@/components/ui/checkout/CheckoutDeliveryMethod";
 import CheckoutPaymentMethod from "@/components/ui/checkout/CheckoutPaymentMethod";
 import CheckoutOrderSummary from "@/components/ui/checkout/CheckoutOrderSummary";
+import OrderSuccessView from "@/components/ui/checkout/OrderSuccessView";
+import { validateAddressForm } from "@/utils/addressValidation";
 
 function CheckoutContent() {
-  const router = useRouter();
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.auth.token);
 
   const [clearDbCart] = useClearCartMutation();
   const { data: dbCartResponse } = useGetMyCartQuery(undefined, { skip: !token });
   const { data: addressesResponse, refetch: refetchAddresses } = useGetMyAddressesQuery(undefined, { skip: !token });
+  const { data: locationsResponse } = useGetPublicLocationsQuery(undefined);
   const [createAddress, { isLoading: isCreatingAddress }] = useCreateAddressMutation();
+  const [updateAddress] = useUpdateAddressMutation();
+  const [deleteAddress] = useDeleteAddressMutation();
   const [checkout, { isLoading: isCheckingOut }] = useCheckoutMutation();
 
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
-  const [deliveryMethod, setDeliveryMethod] = useState<"standard" | "express">("standard");
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "bkash" | "nagad" | "card">("cod");
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "bkash" | "nagad">("cod");
   const [transactionId, setTransactionId] = useState("");
   const [orderSuccess, setOrderSuccess] = useState<any>(null);
+  const [currentFormData, setCurrentFormData] = useState<any>({ district: "Dhaka", notes: "" });
 
   const addresses = addressesResponse?.data || [];
   const dbCart = dbCartResponse?.data;
   const items = dbCart?.items || [];
   const subtotal = dbCart?.totalAmount || 0;
-  const deliveryCharge = deliveryMethod === "standard" ? 80 : 130;
+
+  const selectedAddress = addresses.find((a: any) => a._id === selectedAddressId);
+  const selectedDistrictName = selectedAddress?.district || currentFormData?.district || "Dhaka";
+  const districtsList: any[] = locationsResponse?.data?.districts || [];
+  const matchedDistrict = districtsList.find(
+    (d: any) => d.name?.toLowerCase() === selectedDistrictName?.toLowerCase()
+  );
+
+  const deliveryCharge = matchedDistrict
+    ? matchedDistrict.deliveryCharge
+    : selectedDistrictName?.toLowerCase() === "dhaka"
+    ? 70
+    : 130;
+
   const discount = Math.round(subtotal * 0.1);
   const total = Math.max(0, subtotal - discount + deliveryCharge);
 
@@ -70,93 +91,168 @@ function CheckoutContent() {
   const handleAddNewAddress = async (formData: any) => {
     try {
       const res = await createAddress(formData).unwrap();
-      toast.success("Address saved successfully!");
+      toast.success("ঠিকানা সফলভাবে সংরক্ষণ করা হয়েছে!");
       refetchAddresses();
-      if (res?.data?._id) {
-        setSelectedAddressId(res.data._id);
-      }
+      if (res?.data?._id) setSelectedAddressId(res.data._id);
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to save address.");
     }
   };
 
+  const handleUpdateAddress = async (id: string, formData: any) => {
+    try {
+      await updateAddress({ id, data: formData }).unwrap();
+      toast.success("ঠিকানা সফলভাবে আপডেট করা হয়েছে!");
+      refetchAddresses();
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update address.");
+    }
+  };
+
+  const handleDeleteAddress = async (id: string) => {
+    try {
+      await deleteAddress(id).unwrap();
+      toast.success("ঠিকানা মুছে ফেলা হয়েছে!");
+      if (selectedAddressId === id) setSelectedAddressId("");
+      refetchAddresses();
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to delete address.");
+    }
+  };
+
   const handlePlaceOrder = async () => {
-    if (items.length === 0) {
-      toast.error("Your cart is empty.");
-      return;
+    if (items.length === 0) return toast.error("Your cart is empty.");
+
+    let finalAddressId = selectedAddressId;
+    if (!finalAddressId) {
+      const validation = validateAddressForm(currentFormData);
+      if (!validation.isValid) {
+        const firstError =
+          validation.errors.phone ||
+          validation.errors.fullName ||
+          validation.errors.address ||
+          validation.errors.district ||
+          validation.errors.upazila ||
+          "দয়া করে সঠিক ডেলিভারি তথ্য পূরণ করুন।";
+        return toast.error(firstError);
+      }
+      const addressToastId = toast.loading("Saving delivery address...");
+      try {
+        const res = await createAddress({
+          ...currentFormData,
+          fullName: currentFormData.fullName.trim(),
+          phone: currentFormData.phone.trim(),
+          address: currentFormData.address.trim(),
+          isDefault: true,
+        }).unwrap();
+        const createdId = res?.data?._id || res?._id || res?.data?.id || res?.id;
+        if (createdId) {
+          finalAddressId = createdId;
+          setSelectedAddressId(createdId);
+        }
+        toast.dismiss(addressToastId);
+      } catch (err: any) {
+        return toast.error(err?.data?.message || "Failed to save delivery address.", { id: addressToastId });
+      }
     }
 
-    if (!selectedAddressId && addresses.length === 0) {
-      toast.error("Please add a delivery address.");
-      return;
+    if (!finalAddressId) return toast.error("Please add a delivery address.");
+    if ((paymentMethod === "bkash" || paymentMethod === "nagad") && !transactionId.trim()) {
+      return toast.error(`দয়া করে ${paymentMethod === "bkash" ? "bKash" : "Nagad"} Transaction ID (TrxID) লিখুন।`);
     }
 
     const toastId = toast.loading("Processing your order...");
     try {
-      const orderPayload = {
-        shippingAddress: selectedAddressId || addresses[0]?._id,
+      const selectedObj = addresses.find((a: any) => (a._id || a.id) === finalAddressId);
+      const structuredShippingAddress = selectedObj
+        ? {
+            fullName: selectedObj.fullName,
+            phone: selectedObj.phone,
+            address: selectedObj.address,
+            division: selectedObj.division || "Dhaka",
+            district: selectedObj.district || "Dhaka",
+            upazila: selectedObj.upazila || "",
+            city: selectedObj.district || selectedObj.division || "Dhaka",
+          }
+        : {
+            fullName: currentFormData.fullName?.trim() || "",
+            phone: currentFormData.phone?.trim() || "",
+            address: currentFormData.address?.trim() || "",
+            division: currentFormData.division || "Dhaka",
+            district: currentFormData.district || "Dhaka",
+            upazila: currentFormData.upazila || "",
+            city: currentFormData.district || currentFormData.division || "Dhaka",
+          };
+
+      const res = await checkout({
+        address: finalAddressId,
+        shippingAddress: structuredShippingAddress,
         paymentMethod,
-        transactionId: paymentMethod !== "cod" ? transactionId : undefined,
-        deliveryMethod,
+        transactionId: paymentMethod !== "cod" ? transactionId.trim() : undefined,
+        deliveryType: "home_delivery",
+        deliveryCharge,
+        notes: currentFormData?.notes?.trim() || undefined,
+      }).unwrap();
+
+      const createdOrderData = res?.data || res || {};
+      const enrichedOrderData = {
+        ...createdOrderData,
+        items:
+          createdOrderData?.items && createdOrderData.items.length > 0
+            ? createdOrderData.items
+            : items.map((cartIt: any) => ({
+                product: cartIt.product,
+                variant: cartIt.variant,
+                quantity: cartIt.quantity,
+                price: cartIt.price,
+              })),
+        shippingAddress:
+          createdOrderData?.shippingAddress || structuredShippingAddress,
+        deliveryCharge:
+          createdOrderData?.deliveryCharge !== undefined
+            ? createdOrderData.deliveryCharge
+            : deliveryCharge,
+        subtotal:
+          createdOrderData?.subtotal !== undefined
+            ? createdOrderData.subtotal
+            : subtotal,
+        totalAmount:
+          createdOrderData?.totalAmount !== undefined
+            ? createdOrderData.totalAmount
+            : subtotal + deliveryCharge,
       };
 
-      const res = await checkout(orderPayload).unwrap();
       dispatch(clearCart());
       try {
         await clearDbCart(undefined).unwrap();
       } catch (e) {}
-
       toast.success("Order placed successfully!", { id: toastId });
-      setOrderSuccess(res?.data || { orderNumber: "GB-" + Math.floor(100000 + Math.random() * 900000) });
+      setOrderSuccess(enrichedOrderData);
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to place order. Please try again.", { id: toastId });
     }
   };
 
   if (orderSuccess) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <div className="bg-white dark:bg-[#121320] p-8 md:p-12 rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-sm flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[#b0f1c7] text-[#002111] flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl">check_circle</span>
-          </div>
-          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">Order Confirmed!</h2>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
-            Thank you for your order. We have received your order and will dispatch it shortly.
-          </p>
-          <div className="bg-[#f2f3ff] dark:bg-[#09090e] p-4 rounded-xl w-full text-xs flex justify-between font-bold">
-            <span>Order Reference:</span>
-            <span className="text-[#003820] dark:text-[#95d4ac]">{orderSuccess.orderNumber || "GB-2025"}</span>
-          </div>
-          <Button asChild className="w-full bg-[#003820] hover:bg-[#0f5132] text-white mt-2">
-            <Link href="/products">Continue Shopping</Link>
-          </Button>
-        </div>
-      </div>
-    );
+    return <OrderSuccessView orderData={orderSuccess} />;
   }
 
   return (
     <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 w-full">
       <div className="flex flex-col gap-6">
         <CheckoutSteps currentStep={1} />
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Forms */}
           <div className="lg:col-span-8 flex flex-col gap-6">
             <CheckoutShippingAddress
               addresses={addresses}
               selectedAddressId={selectedAddressId}
               onSelectAddress={setSelectedAddressId}
               onAddNewAddress={handleAddNewAddress}
+              onUpdateAddress={handleUpdateAddress}
+              onDeleteAddress={handleDeleteAddress}
               isCreatingAddress={isCreatingAddress}
+              onFormDataChange={setCurrentFormData}
             />
-
-            <CheckoutDeliveryMethod
-              selectedMethod={deliveryMethod}
-              onSelectMethod={setDeliveryMethod}
-            />
-
             <CheckoutPaymentMethod
               selectedPayment={paymentMethod}
               onSelectPayment={setPaymentMethod}
@@ -164,8 +260,6 @@ function CheckoutContent() {
               onTransactionIdChange={setTransactionId}
             />
           </div>
-
-          {/* Right Column: Order Summary */}
           <div className="lg:col-span-4 sticky top-24">
             <CheckoutOrderSummary
               items={items}
