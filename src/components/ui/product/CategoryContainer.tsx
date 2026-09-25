@@ -163,7 +163,7 @@ export default function CategoryContainer({
       {/* 1. Category Hero Banner */}
       <CatalogBanner
         categoryName={matchedCategory?.name || (selectedCategory !== "All Products" ? selectedCategory : "All Products")}
-        categoryTitle={matchedCategory?.title || matchedCategory?.name || (selectedCategory !== "All Products" ? selectedCategory : "Explore All Products")}
+        categoryTitle={matchedCategory?.metaTitle || matchedCategory?.title || matchedCategory?.name || (selectedCategory !== "All Products" ? selectedCategory : "Explore All Products")}
         categorySubtitle={matchedCategory?.subtitle}
         categoryBanner={matchedCategory?.banner}
         categoryImage={matchedCategory?.image || matchedCategory?.thumbnail}
@@ -222,7 +222,7 @@ export default function CategoryContainer({
       {/* 3. Category SEO Description Section */}
       <CategorySeoFooter
         categoryName={matchedCategory?.name || selectedCategory}
-        categoryTitle={matchedCategory?.title || matchedCategory?.name || selectedCategory}
+        categoryTitle={matchedCategory?.metaTitle || matchedCategory?.title || matchedCategory?.name || selectedCategory}
         description={matchedCategory?.description}
       />
     </div>

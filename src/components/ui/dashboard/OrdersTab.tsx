@@ -11,7 +11,7 @@ interface OrdersTabProps {
 type OrderStatusFilter = "all" | "pending" | "processing" | "shipped" | "delivered";
 
 export default function OrdersTab({ setSelectedOrderId }: OrdersTabProps) {
-  const { data: ordersRes, isLoading, refetch } = useGetMyOrdersQuery(undefined);
+  const { data: ordersRes, isLoading } = useGetMyOrdersQuery(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>("all");
 
